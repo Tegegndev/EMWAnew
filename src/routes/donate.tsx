@@ -18,6 +18,7 @@ import {
 import { PageShell } from "@/components/page-shell";
 import { useLanguage } from "@/lib/language-context";
 import { toast } from "sonner";
+import { initializeDonation } from "@/lib/donation.functions";
 
 export const Route = createFileRoute("/donate")({
   head: () => ({
@@ -195,27 +196,41 @@ function DonatePage() {
     try {
       toast.info(
         t(
-          `Initiating secure checkout for ${effectiveAmount.toLocaleString()} ETB...`,
+          `Connecting to secure checkout for ${effectiveAmount.toLocaleString()} ETB...`,
           `የ ${effectiveAmount.toLocaleString()} ብር ክፍያ እየተዘጋጀ ነው...`,
         ),
       );
 
-      // Connects to secure payment checkout
-      await new Promise((resolve) => setTimeout(resolve, 1000));
+      const result = await initializeDonation({
+        data: {
+          amount: effectiveAmount,
+          email,
+          firstName,
+          lastName,
+          phone,
+          notes,
+          isAnonymous,
+          returnUrl: `${window.location.origin}/donate/success`,
+        },
+      });
 
-      toast.success(
-        t(
-          "Ready for secure payment checkout.",
-          "የክፍያ ገጹ ዝግጁ ነው።",
-        ),
-      );
-    } catch {
-      toast.error(
-        t(
-          "Unable to initialize payment. Please try again or use direct bank transfer.",
-          "ክፍያውን ማከናወን አልተቻለም። እባክዎ እንደገና ይሞክሩ ወይም የባንክ ዝውውር ይጠቀሙ。",
-        ),
-      );
+      if (result.success && result.checkoutUrl) {
+        window.location.href = result.checkoutUrl;
+      } else {
+        throw new Error(
+          result.error ||
+            t("Unable to initialize payment. Please try again.", "ክፍያውን ማከናወን አልተቻለም። እባክዎ እንደገና ይሞክሩ።"),
+        );
+      }
+    } catch (err) {
+      const msg =
+        err instanceof Error
+          ? err.message
+          : t(
+              "Unable to initialize payment. Please try again or use direct bank transfer.",
+              "ክፍያውን ማከናወን አልተቻለም። እባክዎ እንደገና ይሞክሩ ወይም የባንክ ዝውውር ይጠቀሙ。",
+            );
+      toast.error(msg);
     } finally {
       setIsSubmitting(false);
     }

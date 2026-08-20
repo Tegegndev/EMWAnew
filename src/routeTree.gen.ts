@@ -28,6 +28,7 @@ import { Route as ContactRouteImport } from './routes/contact'
 import { Route as AdminRouteImport } from './routes/admin'
 import { Route as AboutRouteImport } from './routes/about'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as DonateSuccessRouteImport } from './routes/donate.success'
 
 const VoicesInMotionRoute = VoicesInMotionRouteImport.update({
   id: '/voices-in-motion',
@@ -124,13 +125,18 @@ const IndexRoute = IndexRouteImport.update({
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const DonateSuccessRoute = DonateSuccessRouteImport.update({
+  id: '/success',
+  path: '/success',
+  getParentRoute: () => DonateRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/about': typeof AboutRoute
   '/admin': typeof AdminRoute
   '/contact': typeof ContactRoute
-  '/donate': typeof DonateRoute
+  '/donate': typeof DonateRouteWithChildren
   '/events': typeof EventsRoute
   '/experts': typeof ExpertsRoute
   '/membership': typeof MembershipRoute
@@ -145,13 +151,14 @@ export interface FileRoutesByFullPath {
   '/testimonials': typeof TestimonialsRoute
   '/updates': typeof UpdatesRoute
   '/voices-in-motion': typeof VoicesInMotionRoute
+  '/donate/success': typeof DonateSuccessRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/about': typeof AboutRoute
   '/admin': typeof AdminRoute
   '/contact': typeof ContactRoute
-  '/donate': typeof DonateRoute
+  '/donate': typeof DonateRouteWithChildren
   '/events': typeof EventsRoute
   '/experts': typeof ExpertsRoute
   '/membership': typeof MembershipRoute
@@ -166,6 +173,7 @@ export interface FileRoutesByTo {
   '/testimonials': typeof TestimonialsRoute
   '/updates': typeof UpdatesRoute
   '/voices-in-motion': typeof VoicesInMotionRoute
+  '/donate/success': typeof DonateSuccessRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -173,7 +181,7 @@ export interface FileRoutesById {
   '/about': typeof AboutRoute
   '/admin': typeof AdminRoute
   '/contact': typeof ContactRoute
-  '/donate': typeof DonateRoute
+  '/donate': typeof DonateRouteWithChildren
   '/events': typeof EventsRoute
   '/experts': typeof ExpertsRoute
   '/membership': typeof MembershipRoute
@@ -188,6 +196,7 @@ export interface FileRoutesById {
   '/testimonials': typeof TestimonialsRoute
   '/updates': typeof UpdatesRoute
   '/voices-in-motion': typeof VoicesInMotionRoute
+  '/donate/success': typeof DonateSuccessRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -211,6 +220,7 @@ export interface FileRouteTypes {
     | '/testimonials'
     | '/updates'
     | '/voices-in-motion'
+    | '/donate/success'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -232,6 +242,7 @@ export interface FileRouteTypes {
     | '/testimonials'
     | '/updates'
     | '/voices-in-motion'
+    | '/donate/success'
   id:
     | '__root__'
     | '/'
@@ -253,6 +264,7 @@ export interface FileRouteTypes {
     | '/testimonials'
     | '/updates'
     | '/voices-in-motion'
+    | '/donate/success'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -260,7 +272,7 @@ export interface RootRouteChildren {
   AboutRoute: typeof AboutRoute
   AdminRoute: typeof AdminRoute
   ContactRoute: typeof ContactRoute
-  DonateRoute: typeof DonateRoute
+  DonateRoute: typeof DonateRouteWithChildren
   EventsRoute: typeof EventsRoute
   ExpertsRoute: typeof ExpertsRoute
   MembershipRoute: typeof MembershipRoute
@@ -412,15 +424,33 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/donate/success': {
+      id: '/donate/success'
+      path: '/success'
+      fullPath: '/donate/success'
+      preLoaderRoute: typeof DonateSuccessRouteImport
+      parentRoute: typeof DonateRoute
+    }
   }
 }
+
+interface DonateRouteChildren {
+  DonateSuccessRoute: typeof DonateSuccessRoute
+}
+
+const DonateRouteChildren: DonateRouteChildren = {
+  DonateSuccessRoute: DonateSuccessRoute,
+}
+
+const DonateRouteWithChildren =
+  DonateRoute._addFileChildren(DonateRouteChildren)
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AboutRoute: AboutRoute,
   AdminRoute: AdminRoute,
   ContactRoute: ContactRoute,
-  DonateRoute: DonateRoute,
+  DonateRoute: DonateRouteWithChildren,
   EventsRoute: EventsRoute,
   ExpertsRoute: ExpertsRoute,
   MembershipRoute: MembershipRoute,
