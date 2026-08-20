@@ -85,7 +85,7 @@ function ThankYouPage() {
       currency: "ETB",
       txRef: activeRef,
       reference: activeRef,
-      receiptUrl: `https://checkout.chapa.co/checkout/receipt/${encodeURIComponent(activeRef)}`,
+      receiptUrl: `https://chapa.link/payment-receipt/${encodeURIComponent(activeRef)}`,
       donorName: savedName,
       email: savedEmail,
       date: new Date().toISOString(),

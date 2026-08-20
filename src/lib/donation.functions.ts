@@ -180,7 +180,7 @@ export const verifyDonation = createServerFn({ method: "POST" })
         txRef: txData.tx_ref || data.txRef,
         reference,
         paymentMethod: txData.method || txData.payment_method,
-        receiptUrl: `https://checkout.chapa.co/checkout/receipt/${encodeURIComponent(reference)}`,
+        receiptUrl: `https://chapa.link/payment-receipt/${encodeURIComponent(reference)}`,
         donorName: `${txData.first_name || ""} ${txData.last_name || ""}`.trim(),
         email: txData.email,
         date: txData.created_at || new Date().toISOString(),
