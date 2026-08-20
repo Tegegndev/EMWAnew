@@ -11,6 +11,7 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as VoicesInMotionRouteImport } from './routes/voices-in-motion'
 import { Route as UpdatesRouteImport } from './routes/updates'
+import { Route as ThankYouRouteImport } from './routes/thank-you'
 import { Route as TestimonialsRouteImport } from './routes/testimonials'
 import { Route as TermsRouteImport } from './routes/terms'
 import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
@@ -28,7 +29,6 @@ import { Route as ContactRouteImport } from './routes/contact'
 import { Route as AdminRouteImport } from './routes/admin'
 import { Route as AboutRouteImport } from './routes/about'
 import { Route as IndexRouteImport } from './routes/index'
-import { Route as DonateSuccessRouteImport } from './routes/donate.success'
 
 const VoicesInMotionRoute = VoicesInMotionRouteImport.update({
   id: '/voices-in-motion',
@@ -38,6 +38,11 @@ const VoicesInMotionRoute = VoicesInMotionRouteImport.update({
 const UpdatesRoute = UpdatesRouteImport.update({
   id: '/updates',
   path: '/updates',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ThankYouRoute = ThankYouRouteImport.update({
+  id: '/thank-you',
+  path: '/thank-you',
   getParentRoute: () => rootRouteImport,
 } as any)
 const TestimonialsRoute = TestimonialsRouteImport.update({
@@ -125,18 +130,13 @@ const IndexRoute = IndexRouteImport.update({
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
-const DonateSuccessRoute = DonateSuccessRouteImport.update({
-  id: '/success',
-  path: '/success',
-  getParentRoute: () => DonateRoute,
-} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/about': typeof AboutRoute
   '/admin': typeof AdminRoute
   '/contact': typeof ContactRoute
-  '/donate': typeof DonateRouteWithChildren
+  '/donate': typeof DonateRoute
   '/events': typeof EventsRoute
   '/experts': typeof ExpertsRoute
   '/membership': typeof MembershipRoute
@@ -149,16 +149,16 @@ export interface FileRoutesByFullPath {
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/terms': typeof TermsRoute
   '/testimonials': typeof TestimonialsRoute
+  '/thank-you': typeof ThankYouRoute
   '/updates': typeof UpdatesRoute
   '/voices-in-motion': typeof VoicesInMotionRoute
-  '/donate/success': typeof DonateSuccessRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/about': typeof AboutRoute
   '/admin': typeof AdminRoute
   '/contact': typeof ContactRoute
-  '/donate': typeof DonateRouteWithChildren
+  '/donate': typeof DonateRoute
   '/events': typeof EventsRoute
   '/experts': typeof ExpertsRoute
   '/membership': typeof MembershipRoute
@@ -171,9 +171,9 @@ export interface FileRoutesByTo {
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/terms': typeof TermsRoute
   '/testimonials': typeof TestimonialsRoute
+  '/thank-you': typeof ThankYouRoute
   '/updates': typeof UpdatesRoute
   '/voices-in-motion': typeof VoicesInMotionRoute
-  '/donate/success': typeof DonateSuccessRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -181,7 +181,7 @@ export interface FileRoutesById {
   '/about': typeof AboutRoute
   '/admin': typeof AdminRoute
   '/contact': typeof ContactRoute
-  '/donate': typeof DonateRouteWithChildren
+  '/donate': typeof DonateRoute
   '/events': typeof EventsRoute
   '/experts': typeof ExpertsRoute
   '/membership': typeof MembershipRoute
@@ -194,9 +194,9 @@ export interface FileRoutesById {
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/terms': typeof TermsRoute
   '/testimonials': typeof TestimonialsRoute
+  '/thank-you': typeof ThankYouRoute
   '/updates': typeof UpdatesRoute
   '/voices-in-motion': typeof VoicesInMotionRoute
-  '/donate/success': typeof DonateSuccessRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -218,9 +218,9 @@ export interface FileRouteTypes {
     | '/sitemap.xml'
     | '/terms'
     | '/testimonials'
+    | '/thank-you'
     | '/updates'
     | '/voices-in-motion'
-    | '/donate/success'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -240,9 +240,9 @@ export interface FileRouteTypes {
     | '/sitemap.xml'
     | '/terms'
     | '/testimonials'
+    | '/thank-you'
     | '/updates'
     | '/voices-in-motion'
-    | '/donate/success'
   id:
     | '__root__'
     | '/'
@@ -262,9 +262,9 @@ export interface FileRouteTypes {
     | '/sitemap.xml'
     | '/terms'
     | '/testimonials'
+    | '/thank-you'
     | '/updates'
     | '/voices-in-motion'
-    | '/donate/success'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -272,7 +272,7 @@ export interface RootRouteChildren {
   AboutRoute: typeof AboutRoute
   AdminRoute: typeof AdminRoute
   ContactRoute: typeof ContactRoute
-  DonateRoute: typeof DonateRouteWithChildren
+  DonateRoute: typeof DonateRoute
   EventsRoute: typeof EventsRoute
   ExpertsRoute: typeof ExpertsRoute
   MembershipRoute: typeof MembershipRoute
@@ -285,6 +285,7 @@ export interface RootRouteChildren {
   SitemapDotxmlRoute: typeof SitemapDotxmlRoute
   TermsRoute: typeof TermsRoute
   TestimonialsRoute: typeof TestimonialsRoute
+  ThankYouRoute: typeof ThankYouRoute
   UpdatesRoute: typeof UpdatesRoute
   VoicesInMotionRoute: typeof VoicesInMotionRoute
 }
@@ -303,6 +304,13 @@ declare module '@tanstack/react-router' {
       path: '/updates'
       fullPath: '/updates'
       preLoaderRoute: typeof UpdatesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/thank-you': {
+      id: '/thank-you'
+      path: '/thank-you'
+      fullPath: '/thank-you'
+      preLoaderRoute: typeof ThankYouRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/testimonials': {
@@ -424,33 +432,15 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/donate/success': {
-      id: '/donate/success'
-      path: '/success'
-      fullPath: '/donate/success'
-      preLoaderRoute: typeof DonateSuccessRouteImport
-      parentRoute: typeof DonateRoute
-    }
   }
 }
-
-interface DonateRouteChildren {
-  DonateSuccessRoute: typeof DonateSuccessRoute
-}
-
-const DonateRouteChildren: DonateRouteChildren = {
-  DonateSuccessRoute: DonateSuccessRoute,
-}
-
-const DonateRouteWithChildren =
-  DonateRoute._addFileChildren(DonateRouteChildren)
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AboutRoute: AboutRoute,
   AdminRoute: AdminRoute,
   ContactRoute: ContactRoute,
-  DonateRoute: DonateRouteWithChildren,
+  DonateRoute: DonateRoute,
   EventsRoute: EventsRoute,
   ExpertsRoute: ExpertsRoute,
   MembershipRoute: MembershipRoute,
@@ -463,6 +453,7 @@ const rootRouteChildren: RootRouteChildren = {
   SitemapDotxmlRoute: SitemapDotxmlRoute,
   TermsRoute: TermsRoute,
   TestimonialsRoute: TestimonialsRoute,
+  ThankYouRoute: ThankYouRoute,
   UpdatesRoute: UpdatesRoute,
   VoicesInMotionRoute: VoicesInMotionRoute,
 }

@@ -62,8 +62,8 @@ export const initializeDonation = createServerFn({ method: "POST" })
 
     // Compute guaranteed return URL with tx_ref parameter
     const rawBase = data.returnUrl || process.env.APP_BASE_URL || "http://localhost:5173";
-    const cleanOrigin = rawBase.split("?")[0].replace(/\/donate\/success\/?$/, "").replace(/\/$/, "");
-    const returnUrl = `${cleanOrigin}/donate/success?tx_ref=${encodeURIComponent(txRef)}`;
+    const cleanOrigin = rawBase.split("?")[0].replace(/\/donate\/success\/?$/, "").replace(/\/thank-you\/?$/, "").replace(/\/$/, "");
+    const returnUrl = `${cleanOrigin}/thank-you?tx_ref=${encodeURIComponent(txRef)}`;
 
     try {
       const response = await fetch("https://api.chapa.co/v1/transaction/initialize", {

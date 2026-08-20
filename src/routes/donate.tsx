@@ -210,7 +210,7 @@ function DonatePage() {
           phone,
           notes,
           isAnonymous,
-          returnUrl: `${window.location.origin}/donate/success`,
+          returnUrl: `${window.location.origin}/thank-you`,
         },
       });
 
