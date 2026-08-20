@@ -215,6 +215,12 @@ function DonatePage() {
       });
 
       if (result.success && result.checkoutUrl) {
+        if (typeof window !== "undefined") {
+          if (result.txRef) sessionStorage.setItem("emwa_last_tx_ref", result.txRef);
+          sessionStorage.setItem("emwa_last_amount", String(effectiveAmount));
+          sessionStorage.setItem("emwa_last_donor_name", `${firstName} ${lastName}`.trim());
+          sessionStorage.setItem("emwa_last_donor_email", email.trim());
+        }
         window.location.href = result.checkoutUrl;
       } else {
         throw new Error(

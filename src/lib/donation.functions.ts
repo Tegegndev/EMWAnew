@@ -60,12 +60,10 @@ export const initializeDonation = createServerFn({ method: "POST" })
 
     const txRef = `EMWA-DONATION-${Date.now()}-${Math.random().toString(36).substring(2, 7).toUpperCase()}`;
 
-    // Compute return URL
-    const baseUrl =
-      process.env.APP_BASE_URL ||
-      (typeof window !== "undefined" ? window.location.origin : "http://localhost:5173");
-    const returnUrl =
-      data.returnUrl || `${baseUrl}/donate/success?tx_ref=${encodeURIComponent(txRef)}`;
+    // Compute guaranteed return URL with tx_ref parameter
+    const rawBase = data.returnUrl || process.env.APP_BASE_URL || "http://localhost:5173";
+    const cleanOrigin = rawBase.split("?")[0].replace(/\/donate\/success\/?$/, "").replace(/\/$/, "");
+    const returnUrl = `${cleanOrigin}/donate/success?tx_ref=${encodeURIComponent(txRef)}`;
 
     try {
       const response = await fetch("https://api.chapa.co/v1/transaction/initialize", {
