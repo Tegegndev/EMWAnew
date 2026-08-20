@@ -8,7 +8,6 @@ import {
   CheckCircle2,
   Copy,
   Download,
-  ExternalLink,
   Heart,
   Radio,
   Share2,
@@ -405,29 +404,17 @@ function ThankYouPage() {
                   <span>
                     {isDownloading
                       ? t("Generating Receipt...", "ደረሰኝ በማዘጋጀት ላይ...")
-                      : t("Download PDF Receipt", "ኦፊሴላዊ ደረሰኝ አውርድ (PDF)")}
+                      : t("Download Official PDF Receipt", "ኦፊሴላዊ ደረሰኝ አውርድ (PDF)")}
                   </span>
                 </button>
-
-                {result.receiptUrl && (
-                  <a
-                    href={result.receiptUrl}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="flex items-center justify-center gap-2 rounded-2xl border-2 border-border bg-background px-5 py-4 text-sm font-bold text-foreground hover:border-primary/60 transition-colors"
-                  >
-                    <ExternalLink className="size-4 text-primary" />
-                    <span>{t("Chapa Online Receipt", "የቻፓ ኦንላይን ደረሰኝ")}</span>
-                  </a>
-                )}
 
                 <button
                   type="button"
                   onClick={handleShare}
-                  className="flex items-center justify-center gap-2 rounded-2xl border-2 border-border bg-background px-5 py-4 text-sm font-bold text-foreground hover:border-primary/60 transition-colors cursor-pointer"
+                  className="flex items-center justify-center gap-2 rounded-2xl border-2 border-border bg-background px-6 py-4 text-sm font-bold text-foreground hover:border-primary/60 transition-colors cursor-pointer"
                 >
                   {copiedShare ? <Check className="size-4 text-emerald-500" /> : <Share2 className="size-4" />}
-                  <span>{copiedShare ? t("Copied!", "ተቀድቷል!") : t("Share", "አጋራ")}</span>
+                  <span>{copiedShare ? t("Copied!", "ተቀድቷል!") : t("Share Support", "መልዕክት አጋራ")}</span>
                 </button>
               </div>
 
