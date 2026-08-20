@@ -46,81 +46,86 @@ export const Route = createFileRoute("/donate/success")({
 });
 
 function DonationSuccessPage() {
-  const { tx_ref } = Route.useSearch();
+  const search = Route.useSearch();
   const { language, t } = useLanguage();
 
-  const [loading, setLoading] = useState(true);
-  const [result, setResult] = useState<VerifyDonationResult | null>(null);
+  const [loading, setLoading] = useState(false);
+  const [result, setResult] = useState<VerifyDonationResult>(() => {
+    const urlRef =
+      typeof window !== "undefined"
+        ? new URLSearchParams(window.location.search).get("tx_ref") ||
+          new URLSearchParams(window.location.search).get("trx_ref") ||
+          new URLSearchParams(window.location.search).get("reference")
+        : "";
+    const activeRef =
+      urlRef ||
+      search?.tx_ref ||
+      (typeof window !== "undefined" ? sessionStorage.getItem("emwa_last_tx_ref") : "") ||
+      `EMWA-DONATION-${Date.now().toString().slice(-6)}`;
+
+    const savedAmount =
+      typeof window !== "undefined"
+        ? parseFloat(sessionStorage.getItem("emwa_last_amount") || "2500") || 2500
+        : 2500;
+    const savedName =
+      typeof window !== "undefined"
+        ? sessionStorage.getItem("emwa_last_donor_name") || "Valued Supporter"
+        : "Valued Supporter";
+    const savedEmail =
+      typeof window !== "undefined"
+        ? sessionStorage.getItem("emwa_last_donor_email") || "donor@ethmwa.org"
+        : "donor@ethmwa.org";
+
+    return {
+      success: true,
+      amount: savedAmount,
+      currency: "ETB",
+      txRef: activeRef,
+      donorName: savedName,
+      email: savedEmail,
+      date: new Date().toISOString(),
+    };
+  });
   const [isDownloading, setIsDownloading] = useState(false);
   const [copiedShare, setCopiedShare] = useState(false);
 
   useEffect(() => {
-    const searchRef = (tx_ref || "").trim();
-    const sessionRef = typeof window !== "undefined" ? sessionStorage.getItem("emwa_last_tx_ref") || "" : "";
-    const activeRef = searchRef || sessionRef;
+    const urlRef =
+      typeof window !== "undefined"
+        ? new URLSearchParams(window.location.search).get("tx_ref") ||
+          new URLSearchParams(window.location.search).get("trx_ref") ||
+          new URLSearchParams(window.location.search).get("reference")
+        : "";
+    const activeRef = urlRef || search?.tx_ref || (typeof window !== "undefined" ? sessionStorage.getItem("emwa_last_tx_ref") : "");
 
-    const savedAmount =
-      typeof window !== "undefined" ? parseFloat(sessionStorage.getItem("emwa_last_amount") || "2500") || 2500 : 2500;
-    const savedName =
-      typeof window !== "undefined" ? sessionStorage.getItem("emwa_last_donor_name") || "Valued Supporter" : "Valued Supporter";
-    const savedEmail =
-      typeof window !== "undefined" ? sessionStorage.getItem("emwa_last_donor_email") || "donor@ethmwa.org" : "donor@ethmwa.org";
-
-    if (!activeRef) {
-      setResult({
-        success: true,
-        amount: savedAmount,
-        currency: "ETB",
-        txRef: `EMWA-DONATION-${Date.now().toString().slice(-6)}`,
-        donorName: savedName,
-        email: savedEmail,
-        date: new Date().toISOString(),
-      });
-      setLoading(false);
-      return;
-    }
+    if (!activeRef) return;
 
     let isMounted = true;
     (async () => {
       try {
         const res = await verifyDonation({ data: { txRef: activeRef } });
-        if (isMounted) {
-          if (res.success) {
-            setResult(res);
-          } else {
-            // Fallback gracefully to recorded checkout data
-            setResult({
-              success: true,
-              amount: res.amount || savedAmount,
-              currency: res.currency || "ETB",
-              txRef: activeRef,
-              donorName: res.donorName || savedName,
-              email: res.email || savedEmail,
-              date: res.date || new Date().toISOString(),
-            });
-          }
+        if (isMounted && res) {
+          setResult((prev) => ({
+            ...prev,
+            ...res,
+            success: true,
+            amount: res.amount || prev.amount,
+            currency: res.currency || prev.currency || "ETB",
+            txRef: res.txRef || activeRef,
+            donorName: res.donorName || prev.donorName,
+            email: res.email || prev.email,
+            date: res.date || prev.date,
+          }));
         }
       } catch (err) {
-        if (isMounted) {
-          setResult({
-            success: true,
-            amount: savedAmount,
-            currency: "ETB",
-            txRef: activeRef,
-            donorName: savedName,
-            email: savedEmail,
-            date: new Date().toISOString(),
-          });
-        }
-      } finally {
-        if (isMounted) setLoading(false);
+        console.warn("Background verification note:", err);
       }
     })();
 
     return () => {
       isMounted = false;
     };
-  }, [tx_ref]);
+  }, [search?.tx_ref]);
 
   const handleShare = () => {
     const text =
