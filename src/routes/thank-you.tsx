@@ -8,6 +8,7 @@ import {
   CheckCircle2,
   Copy,
   Download,
+  ExternalLink,
   Heart,
   Radio,
   Share2,
@@ -49,6 +50,7 @@ function ThankYouPage() {
 
   const [isDownloading, setIsDownloading] = useState(false);
   const [copiedShare, setCopiedShare] = useState(false);
+  const [copiedTxRef, setCopiedTxRef] = useState(false);
 
   // Extract reference ID from URL or Session Storage
   const [result, setResult] = useState<VerifyDonationResult>(() => {
@@ -82,11 +84,20 @@ function ThankYouPage() {
       amount: savedAmount,
       currency: "ETB",
       txRef: activeRef,
+      reference: activeRef,
+      receiptUrl: `https://checkout.chapa.co/checkout/receipt/${encodeURIComponent(activeRef)}`,
       donorName: savedName,
       email: savedEmail,
       date: new Date().toISOString(),
     };
   });
+
+  const handleCopyTxRef = (id: string) => {
+    navigator.clipboard.writeText(id);
+    setCopiedTxRef(true);
+    toast.success(t("Transaction Reference copied!", "የግብይት ቁጥር ተቀድቷል!"));
+    setTimeout(() => setCopiedTxRef(false), 3000);
+  };
 
   useEffect(() => {
     const urlRef =
@@ -114,6 +125,9 @@ function ThankYouPage() {
             amount: res.amount || prev.amount,
             currency: res.currency || prev.currency || "ETB",
             txRef: res.txRef || activeRef,
+            reference: res.reference || res.txRef || activeRef,
+            receiptUrl: res.receiptUrl || prev.receiptUrl,
+            paymentMethod: res.paymentMethod || prev.paymentMethod,
             donorName: res.donorName || prev.donorName,
             email: res.email || prev.email,
             date: res.date || prev.date,
@@ -324,12 +338,23 @@ function ThankYouPage() {
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs sm:text-sm">
                   <div>
                     <span className="text-muted-foreground text-xs block mb-0.5 label-mono uppercase">
-                      {t("Receipt Reference", "የማረጋገጫ ቁጥር")}
+                      {t("Transaction Reference ID", "የግብይት መለያ ቁጥር")}
                     </span>
-                    <span className="font-mono font-bold text-foreground text-xs sm:text-sm">
-                      {result.txRef}
-                    </span>
+                    <div className="flex items-center gap-2">
+                      <span className="font-mono font-bold text-foreground text-xs sm:text-sm truncate">
+                        {result.txRef}
+                      </span>
+                      <button
+                        type="button"
+                        onClick={() => handleCopyTxRef(result.txRef || "")}
+                        title={t("Copy ID", "ቁጥሩን ቅዳ")}
+                        className="p-1 rounded-md bg-background border border-border/80 hover:border-primary text-muted-foreground hover:text-primary transition-colors shrink-0"
+                      >
+                        {copiedTxRef ? <Check className="size-3.5 text-emerald-500" /> : <Copy className="size-3.5" />}
+                      </button>
+                    </div>
                   </div>
+
                   <div>
                     <span className="text-muted-foreground text-xs block mb-0.5 label-mono uppercase">
                       {t("Date & Time", "ቀን እና ሰዓት")}
@@ -338,6 +363,7 @@ function ThankYouPage() {
                       {result.date ? new Date(result.date).toLocaleString() : new Date().toLocaleString()}
                     </span>
                   </div>
+
                   {result.donorName && (
                     <div>
                       <span className="text-muted-foreground text-xs block mb-0.5 label-mono uppercase">
@@ -346,12 +372,22 @@ function ThankYouPage() {
                       <span className="text-foreground font-semibold">{result.donorName}</span>
                     </div>
                   )}
+
                   {result.email && (
                     <div>
                       <span className="text-muted-foreground text-xs block mb-0.5 label-mono uppercase">
                         {t("Receipt Sent To", "ደረሰኝ የተላከበት")}
                       </span>
                       <span className="text-foreground font-medium">{result.email}</span>
+                    </div>
+                  )}
+
+                  {result.paymentMethod && (
+                    <div>
+                      <span className="text-muted-foreground text-xs block mb-0.5 label-mono uppercase">
+                        {t("Payment Channel", "የክፍያ መንገድ")}
+                      </span>
+                      <span className="text-foreground font-semibold uppercase">{result.paymentMethod}</span>
                     </div>
                   )}
                 </div>
@@ -373,13 +409,25 @@ function ThankYouPage() {
                   </span>
                 </button>
 
+                {result.receiptUrl && (
+                  <a
+                    href={result.receiptUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex items-center justify-center gap-2 rounded-2xl border-2 border-border bg-background px-5 py-4 text-sm font-bold text-foreground hover:border-primary/60 transition-colors"
+                  >
+                    <ExternalLink className="size-4 text-primary" />
+                    <span>{t("Chapa Online Receipt", "የቻፓ ኦንላይን ደረሰኝ")}</span>
+                  </a>
+                )}
+
                 <button
                   type="button"
                   onClick={handleShare}
-                  className="flex items-center justify-center gap-2 rounded-2xl border-2 border-border bg-background px-6 py-4 text-sm font-bold text-foreground hover:border-primary/60 transition-colors cursor-pointer"
+                  className="flex items-center justify-center gap-2 rounded-2xl border-2 border-border bg-background px-5 py-4 text-sm font-bold text-foreground hover:border-primary/60 transition-colors cursor-pointer"
                 >
                   {copiedShare ? <Check className="size-4 text-emerald-500" /> : <Share2 className="size-4" />}
-                  <span>{copiedShare ? t("Copied!", "ተቀድቷል!") : t("Share Support", "መልዕክት አጋራ")}</span>
+                  <span>{copiedShare ? t("Copied!", "ተቀድቷል!") : t("Share", "አጋራ")}</span>
                 </button>
               </div>
 

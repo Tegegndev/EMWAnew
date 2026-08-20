@@ -24,6 +24,9 @@ export interface VerifyDonationResult {
   amount?: number;
   currency?: string;
   txRef?: string;
+  reference?: string;
+  paymentMethod?: string;
+  receiptUrl?: string;
   donorName?: string;
   email?: string;
   date?: string;
@@ -150,6 +153,9 @@ export const verifyDonation = createServerFn({ method: "POST" })
           first_name?: string;
           last_name?: string;
           email?: string;
+          reference?: string;
+          method?: string;
+          payment_method?: string;
           created_at?: string;
           tx_ref?: string;
         };
@@ -164,6 +170,7 @@ export const verifyDonation = createServerFn({ method: "POST" })
 
       const txData = payload.data;
       const isSuccess = txData.status === "success";
+      const reference = txData.reference || data.txRef;
 
       return {
         success: isSuccess,
@@ -171,6 +178,9 @@ export const verifyDonation = createServerFn({ method: "POST" })
         amount: typeof txData.amount === "string" ? parseFloat(txData.amount) : txData.amount,
         currency: txData.currency || "ETB",
         txRef: txData.tx_ref || data.txRef,
+        reference,
+        paymentMethod: txData.method || txData.payment_method,
+        receiptUrl: `https://checkout.chapa.co/checkout/receipt/${encodeURIComponent(reference)}`,
         donorName: `${txData.first_name || ""} ${txData.last_name || ""}`.trim(),
         email: txData.email,
         date: txData.created_at || new Date().toISOString(),
