@@ -1,0 +1,134 @@
+/* EMWA Brand Color Palette */
+/* Primary: EMWA Burgundy */
+:root {
+  /* PRIMARY BURGUNDY */
+  --emwa-burgundy: #8C2D3C;
+  --emwa-burgundy-rgb: 140 45 60;
+  
+  /* BURGUNDY SHADES (darker) */
+  --emwa-burgundy-shade-1: #2A0D13;
+  --emwa-burgundy-shade-2: #41111A;
+  --emwa-burgundy-shade-3: #5C1E28;
+  
+  /* BURGUNDY TINTS (lighter) */
+  --emwa-burgundy-tint-1: #B96170;
+  --emwa-burgundy-tint-2: #DFB4BB;
+  --emwa-burgundy-tint-3: #F6EAEC;
+  
+  /* HERITAGE BLUE - Logo Reproduction Only (NEVER for text or UI) */
+  --emwa-blue-dark: #123F73;
+  --emwa-blue-primary: #1D5BA6;
+  --emwa-blue-light: #5F8FC4;
+  --emwa-blue-pale: #AFC8E3;
+  --emwa-blue-very-light: #EAF1FA;
+}
+
+/* CSS Color Functions for OKLch Conversion */
+:root {
+  /* PRIMARY BURGUNDY in OKLch */
+  --emwa-burgundy-oklch: oklch(0.42 0.13 15);
+  
+  /* BURGUNDY SHADES in OKLch */
+  --emwa-burgundy-shade-1-oklch: oklch(0.11 0.07 15);
+  --emwa-burgundy-shade-2-oklch: oklch(0.15 0.07 15);
+  --emwa-burgundy-shade-3-oklch: oklch(0.28 0.07 15);
+  
+  /* BURGUNDY TINTS in OKLch */
+  --emwa-burgundy-tint-1-oklch: oklch(0.55 0.12 15);
+  --emwa-burgundy-tint-2-oklch: oklch(0.77 0.09 15);
+  --emwa-burgundy-tint-3-oklch: oklch(0.94 0.02 15);
+  
+  /* HERITAGE BLUE in OKLch (reference only) */
+  --emwa-blue-dark-oklch: oklch(0.28 0.13 260);
+  --emwa-blue-primary-oklch: oklch(0.38 0.14 260);
+  --emwa-blue-light-oklch: oklch(0.56 0.09 260);
+  --emwa-blue-pale-oklch: oklch(0.76 0.05 260);
+  --emwa-blue-very-light-oklch: oklch(0.92 0.02 260);
+}
+
+/* Utility Classes for Text Colors */
+.text-emwa-burgundy {
+  color: var(--emwa-burgundy);
+}
+
+.text-emwa-burgundy-shade-1 {
+  color: var(--emwa-burgundy-shade-1);
+}
+
+.text-emwa-burgundy-shade-2 {
+  color: var(--emwa-burgundy-shade-2);
+}
+
+.text-emwa-burgundy-shade-3 {
+  color: var(--emwa-burgundy-shade-3);
+}
+
+.text-emwa-burgundy-tint-1 {
+  color: var(--emwa-burgundy-tint-1);
+}
+
+.text-emwa-burgundy-tint-2 {
+  color: var(--emwa-burgundy-tint-2);
+}
+
+.text-emwa-burgundy-tint-3 {
+  color: var(--emwa-burgundy-tint-3);
+}
+
+/* Utility Classes for Background Colors */
+.bg-emwa-burgundy {
+  background-color: var(--emwa-burgundy);
+}
+
+.bg-emwa-burgundy-shade-1 {
+  background-color: var(--emwa-burgundy-shade-1);
+}
+
+.bg-emwa-burgundy-shade-2 {
+  background-color: var(--emwa-burgundy-shade-2);
+}
+
+.bg-emwa-burgundy-shade-3 {
+  background-color: var(--emwa-burgundy-shade-3);
+}
+
+.bg-emwa-burgundy-tint-1 {
+  background-color: var(--emwa-burgundy-tint-1);
+}
+
+.bg-emwa-burgundy-tint-2 {
+  background-color: var(--emwa-burgundy-tint-2);
+}
+
+.bg-emwa-burgundy-tint-3 {
+  background-color: var(--emwa-burgundy-tint-3);
+}
+
+/* Utility Classes for Border Colors */
+.border-emwa-burgundy {
+  border-color: var(--emwa-burgundy);
+}
+
+.border-emwa-burgundy-shade-1 {
+  border-color: var(--emwa-burgundy-shade-1);
+}
+
+.border-emwa-burgundy-shade-2 {
+  border-color: var(--emwa-burgundy-shade-2);
+}
+
+.border-emwa-burgundy-shade-3 {
+  border-color: var(--emwa-burgundy-shade-3);
+}
+
+.border-emwa-burgundy-tint-1 {
+  border-color: var(--emwa-burgundy-tint-1);
+}
+
+.border-emwa-burgundy-tint-2 {
+  border-color: var(--emwa-burgundy-tint-2);
+}
+
+.border-emwa-burgundy-tint-3 {
+  border-color: var(--emwa-burgundy-tint-3);
+}

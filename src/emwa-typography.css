@@ -1,0 +1,531 @@
+/* EMWA Typography System */
+/* Google Fonts Import moved to styles.css to satisfy LightningCSS (@import rules must precede other rules) */
+
+/* ============================================
+   FONT FAMILY VARIABLES
+   ============================================ */
+:root {
+  --font-display: 'Archivo', 'Impact', sans-serif;
+  --font-body: 'Public Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  --font-editorial: 'Newsreader', 'Lora', Georgia, serif;
+  --font-amharic: 'Noto Sans Ethiopic', sans-serif;
+  --font-mono: 'JetBrains Mono', 'Menlo', monospace;
+}
+
+/* ============================================
+   TYPOGRAPHY SCALE - DESKTOP
+   ============================================ */
+:root {
+  /* Display / Hero */
+  --fs-display: 52px;
+  --lh-display: 56px;
+  --ls-display: -2%;
+  --fw-display: 900;
+  
+  /* Heading */
+  --fs-heading: 32px;
+  --lh-heading: 38px;
+  --fw-heading: 700;
+  
+  /* Subheading */
+  --fs-subheading: 22px;
+  --lh-subheading: 28px;
+  --fw-subheading: 600;
+  
+  /* Body Text */
+  --fs-body: 17px;
+  --lh-body: 27px;
+  --fw-body: 400;
+  
+  /* Small Text */
+  --fs-small: 15px;
+  --lh-small: 24px;
+  --fw-small: 400;
+  
+  /* Labels & Captions */
+  --fs-label: 13px;
+  --lh-label: 20px;
+  --ls-label: 14%;
+  --fw-label: 600;
+  --tt-label: uppercase;
+}
+
+/* ============================================
+   DISPLAY / HERO TYPOGRAPHY
+   ============================================ */
+.display {
+  font-family: var(--font-display);
+  font-size: var(--fs-display);
+  line-height: var(--lh-display);
+  font-weight: var(--fw-display);
+  letter-spacing: var(--ls-display);
+  text-transform: none;
+}
+
+h1, .hero, .headline-hero {
+  font-family: var(--font-display);
+  font-size: var(--fs-display);
+  line-height: var(--lh-display);
+  font-weight: var(--fw-display);
+  letter-spacing: var(--ls-display);
+}
+
+/* ============================================
+   HEADING TYPOGRAPHY
+   ============================================ */
+.heading {
+  font-family: var(--font-display);
+  font-size: var(--fs-heading);
+  line-height: var(--lh-heading);
+  font-weight: var(--fw-heading);
+  letter-spacing: -1%;
+}
+
+h2, .headline-h2 {
+  font-family: var(--font-display);
+  font-size: var(--fs-heading);
+  line-height: var(--lh-heading);
+  font-weight: var(--fw-heading);
+  letter-spacing: -1%;
+}
+
+/* ============================================
+   SUBHEADING TYPOGRAPHY
+   ============================================ */
+.subheading {
+  font-family: var(--font-display);
+  font-size: var(--fs-subheading);
+  line-height: var(--lh-subheading);
+  font-weight: var(--fw-subheading);
+  letter-spacing: -1%;
+}
+
+h3, .headline-h3 {
+  font-family: var(--font-display);
+  font-size: var(--fs-subheading);
+  line-height: var(--lh-subheading);
+  font-weight: var(--fw-subheading);
+  letter-spacing: -1%;
+}
+
+h4 {
+  font-family: var(--font-display);
+  font-size: calc(var(--fs-subheading) * 0.82); /* ~18px */
+  line-height: 1.4;
+  font-weight: var(--fw-subheading);
+  letter-spacing: -1%;
+}
+
+/* ============================================
+   BODY TEXT TYPOGRAPHY
+   ============================================ */
+.body-text, p {
+  font-family: var(--font-body);
+  font-size: var(--fs-body);
+  line-height: var(--lh-body);
+  font-weight: var(--fw-body);
+}
+
+body {
+  font-family: var(--font-body);
+  font-size: var(--fs-body);
+  line-height: var(--lh-body);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* ============================================
+   SMALL TEXT TYPOGRAPHY
+   ============================================ */
+.small-text {
+  font-family: var(--font-body);
+  font-size: var(--fs-small);
+  line-height: var(--lh-small);
+  font-weight: var(--fw-small);
+}
+
+small, .caption {
+  font-family: var(--font-body);
+  font-size: var(--fs-small);
+  line-height: var(--lh-small);
+}
+
+/* ============================================
+   LABELS & CAPTIONS
+   ============================================ */
+.label, label, .uppercase-label {
+  font-family: var(--font-body);
+  font-size: var(--fs-label);
+  line-height: var(--lh-label);
+  font-weight: var(--fw-label);
+  letter-spacing: var(--ls-label);
+  text-transform: var(--tt-label);
+}
+
+/* ============================================
+   EDITORIAL TYPOGRAPHY (NEWSREADER)
+   ============================================ */
+.quote, .testimonial, .pull-quote {
+  font-family: var(--font-editorial);
+  font-style: italic;
+  font-size: var(--fs-body);
+  line-height: var(--lh-body);
+}
+
+blockquote {
+  font-family: var(--font-editorial);
+  font-style: italic;
+}
+
+/* ============================================
+   AMHARIC TYPOGRAPHY
+   ============================================ */
+.amharic, [lang="am"] {
+  font-family: var(--font-amharic);
+  line-height: 1.4;
+  font-weight: 400;
+}
+
+.amharic-heading, [lang="am"] h1,
+[lang="am"] h2,
+[lang="am"] h3 {
+  font-family: var(--font-amharic);
+  font-weight: 600;
+}
+
+/* ============================================
+   FONT WEIGHTS FOR ARCHIVO
+   ============================================ */
+.archivo-regular {
+  font-family: var(--font-display);
+  font-weight: 400;
+}
+
+.archivo-medium {
+  font-family: var(--font-display);
+  font-weight: 500;
+}
+
+.archivo-semibold {
+  font-family: var(--font-display);
+  font-weight: 600;
+}
+
+.archivo-bold {
+  font-family: var(--font-display);
+  font-weight: 700;
+}
+
+.archivo-black {
+  font-family: var(--font-display);
+  font-weight: 900;
+}
+
+/* ============================================
+   FONT WEIGHTS FOR PUBLIC SANS
+   ============================================ */
+.public-sans-regular {
+  font-family: var(--font-body);
+  font-weight: 400;
+}
+
+.public-sans-medium {
+  font-family: var(--font-body);
+  font-weight: 500;
+}
+
+.public-sans-semibold {
+  font-family: var(--font-body);
+  font-weight: 600;
+}
+
+.public-sans-bold {
+  font-family: var(--font-body);
+  font-weight: 700;
+}
+
+/* ============================================
+   RESPONSIVE TYPOGRAPHY - TABLET
+   ============================================ */
+@media (max-width: 1024px) {
+  :root {
+    --fs-display: 48px;
+    --lh-display: 52px;
+    --fs-heading: 32px;
+    --lh-heading: 38px;
+    --fs-subheading: 22px;
+    --lh-subheading: 28px;
+    --fs-body: 16px;
+    --lh-body: 26px;
+  }
+}
+
+/* ============================================
+   RESPONSIVE TYPOGRAPHY - MOBILE
+   ============================================ */
+@media (max-width: 768px) {
+  :root {
+    --fs-display: 40px;
+    --lh-display: 44px;
+    --fs-heading: 28px;
+    --lh-heading: 32px;
+    --fs-subheading: 20px;
+    --lh-subheading: 26px;
+    --fs-body: 16px;
+    --lh-body: 24px;
+    --fs-label: 12px;
+    --lh-label: 18px;
+  }
+}
+
+/* ============================================
+   TEXT ALIGNMENT UTILITIES
+   ============================================ */
+.text-left {
+  text-align: left;
+}
+
+.text-right {
+  text-align: right;
+}
+
+.text-center {
+  text-align: center;
+}
+
+/* Left-aligned for English (LTR) */
+[lang="en"] {
+  direction: ltr;
+  text-align: left;
+}
+
+/* Proper alignment for Amharic */
+[lang="am"] {
+  direction: ltr;
+  text-align: left;
+  line-height: 1.4;
+}
+
+/* ============================================
+   PARAGRAPH SPACING & WIDTH
+   ============================================ */
+p {
+  max-width: 72ch;
+  margin-bottom: calc(var(--lh-body) * 0.75);
+}
+
+/* Maximum paragraph width: 66–72 characters per line */
+.content, .prose {
+  max-width: 72ch;
+}
+
+/* ============================================
+   LINK STYLING
+   ============================================ */
+a {
+  font-family: var(--font-body);
+  text-decoration: none;
+  transition: all 0.2s ease;
+}
+
+a:hover {
+  text-decoration: underline;
+}
+
+/* ============================================
+   BUTTON TYPOGRAPHY
+   ============================================ */
+button, .button, [role="button"] {
+  font-family: var(--font-body);
+  font-weight: 600;
+  font-size: var(--fs-body);
+}
+
+/* ============================================
+   NAVIGATION TYPOGRAPHY
+   ============================================ */
+nav, .navigation, .nav-link {
+  font-family: var(--font-body);
+  font-weight: 500;
+}
+
+/* ============================================
+   FORM TYPOGRAPHY
+   ============================================ */
+input, textarea, select {
+  font-family: var(--font-body);
+  font-size: var(--fs-body);
+}
+
+/* ============================================
+   TABLE TYPOGRAPHY
+   ============================================ */
+table, th, td {
+  font-family: var(--font-body);
+}
+
+th {
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: var(--ls-label);
+  font-size: var(--fs-label);
+}
+
+td {
+  font-size: var(--fs-body);
+}
+
+/* ============================================
+   FOOTER TYPOGRAPHY
+   ============================================ */
+footer, .footer {
+  font-family: var(--font-body);
+  font-size: var(--fs-small);
+}
+
+/* ============================================
+   CARD TYPOGRAPHY
+   ============================================ */
+.card {
+  font-family: var(--font-body);
+}
+
+.card-title {
+  font-family: var(--font-display);
+  font-size: var(--fs-subheading);
+  font-weight: 600;
+}
+
+.card-text {
+  font-size: var(--fs-body);
+  line-height: var(--lh-body);
+}
+
+/* ============================================
+   MODAL TYPOGRAPHY
+   ============================================ */
+.modal, .dialog {
+  font-family: var(--font-body);
+}
+
+.modal-title, .dialog-title {
+  font-family: var(--font-display);
+  font-size: var(--fs-heading);
+  font-weight: 700;
+}
+
+.modal-body, .dialog-body {
+  font-size: var(--fs-body);
+  line-height: var(--lh-body);
+}
+
+/* ============================================
+   REPORT TYPOGRAPHY
+   ============================================ */
+.report, .document {
+  font-family: var(--font-body);
+}
+
+.report-title {
+  font-family: var(--font-display);
+  font-size: var(--fs-heading);
+  font-weight: 700;
+  margin-bottom: 1.5rem;
+}
+
+/* ============================================
+   CODE TYPOGRAPHY
+   ============================================ */
+code, pre, .code {
+  font-family: var(--font-mono);
+  font-size: calc(var(--fs-body) * 0.88);
+}
+
+/* ============================================
+   TEXT TRANSFORM UTILITIES
+   ============================================ */
+.uppercase {
+  text-transform: uppercase;
+}
+
+.lowercase {
+  text-transform: lowercase;
+}
+
+.capitalize {
+  text-transform: capitalize;
+}
+
+.italic {
+  font-style: italic;
+}
+
+.normal {
+  font-style: normal;
+}
+
+.font-weight-light {
+  font-weight: 300;
+}
+
+.font-weight-normal {
+  font-weight: 400;
+}
+
+.font-weight-medium {
+  font-weight: 500;
+}
+
+.font-weight-semibold {
+  font-weight: 600;
+}
+
+.font-weight-bold {
+  font-weight: 700;
+}
+
+.font-weight-black {
+  font-weight: 900;
+}
+
+/* ============================================
+   LINE HEIGHT UTILITIES
+   ============================================ */
+.leading-tight {
+  line-height: 1.2;
+}
+
+.leading-normal {
+  line-height: 1.5;
+}
+
+.leading-relaxed {
+  line-height: 1.6;
+}
+
+.leading-loose {
+  line-height: 1.8;
+}
+
+/* ============================================
+   LETTER SPACING UTILITIES
+   ============================================ */
+.tracking-tight {
+  letter-spacing: -0.02em;
+}
+
+.tracking-normal {
+  letter-spacing: 0em;
+}
+
+.tracking-wide {
+  letter-spacing: 0.05em;
+}
+
+.tracking-wider {
+  letter-spacing: 0.1em;
+}
+
+.tracking-widest {
+  letter-spacing: 0.2em;
+}
