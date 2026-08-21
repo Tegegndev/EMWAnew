@@ -21,7 +21,7 @@ sequenceDiagram
     participant Gateway as Payment Gateway API
     participant SuccessUI as Confirmation (/donate/success)
 
-    Donor->>UI: Selects amount (min. 100 ETB) & fills contact info
+    Donor->>UI: Selects amount (min. 50 ETB) & fills contact info
     UI->>ServerFn: Calls initializeDonation({ data })
     Note over ServerFn: Validates payload & generates unique tx_ref<br/>Attaches private Secret Key
     ServerFn->>Gateway: POST /v1/transaction/initialize
@@ -43,7 +43,7 @@ sequenceDiagram
 
 | File | Type | Description |
 |---|---|---|
-| [`src/routes/donate.tsx`](file:///home/tegegn/Desktop/projects/beamlk/EMWAnew-main/src/routes/donate.tsx) | Page Route (`/donate`) | Interactive donation form, preset amount buttons (`100 ETB` – `10,000 ETB`), custom amount input, and direct bank transfer copy cards. |
+| [`src/routes/donate.tsx`](file:///home/tegegn/Desktop/projects/beamlk/EMWAnew-main/src/routes/donate.tsx) | Page Route (`/donate`) | Interactive donation form, preset amount buttons (`50 ETB` – `10,000 ETB`), custom amount input, and direct bank transfer copy cards. |
 | [`src/routes/donate.success.tsx`](file:///home/tegegn/Desktop/projects/beamlk/EMWAnew-main/src/routes/donate.success.tsx) | Page Route (`/donate/success`) | Return landing page that automatically verifies transaction references with the gateway and generates downloadable PDF receipts. |
 | [`src/lib/donation.functions.ts`](file:///home/tegegn/Desktop/projects/beamlk/EMWAnew-main/src/lib/donation.functions.ts) | Server Functions | Server-side `initializeDonation` and `verifyDonation` handlers executed via `@tanstack/react-start`. |
 | [`.env`](file:///home/tegegn/Desktop/projects/beamlk/EMWAnew-main/.env) | Environment Config | Secure storage for gateway keys (protected by `.gitignore`). |
@@ -79,7 +79,7 @@ VITE_API_URL=https://api.ethmwa.org/api/v1
 ### 4. How Payment Validation Works
 
 1. **Client-Side Validation**:
-   - Enforces a minimum donation threshold of **100 ETB**.
+   - Enforces a minimum donation threshold of **50 ETB**.
    - Validates required fields (First Name, Last Name, Email).
 2. **Server-Side Initialization**:
    - Re-verifies all input parameters.

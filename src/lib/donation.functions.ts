@@ -47,10 +47,10 @@ export const initializeDonation = createServerFn({ method: "POST" })
       };
     }
 
-    if (!data.amount || data.amount < 100) {
+    if (!data.amount || data.amount < 50) {
       return {
         success: false,
-        error: "Minimum donation amount is 100 ETB.",
+        error: "Minimum donation amount is 50 ETB.",
       };
     }
 

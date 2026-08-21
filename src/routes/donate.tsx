@@ -41,6 +41,7 @@ export const Route = createFileRoute("/donate")({
 });
 
 const PRESET_AMOUNTS = [
+  { amount: 50, labelEn: "50 ETB", labelAm: "50 ብር", impactEn: "Community contribution", impactAm: "የማህበረሰብ ድጋፍ" },
   { amount: 100, labelEn: "100 ETB", labelAm: "100 ብር", impactEn: "Member support", impactAm: "የአባልነት ድጋፍ" },
   { amount: 500, labelEn: "500 ETB", labelAm: "500 ብር", impactEn: "Mentorship session kit", impactAm: "የአማካሪነት ድጋፍ" },
   { amount: 1000, labelEn: "1,000 ETB", labelAm: "1,000 ብር", impactEn: "Safety & legal resource access", impactAm: "የህግና ደህንነት ድጋፍ" },
@@ -182,8 +183,8 @@ function DonatePage() {
 
   const handleOnlineCheckout = async (e: FormEvent) => {
     e.preventDefault();
-    if (effectiveAmount < 100) {
-      toast.error(t("Minimum donation amount is 100 ETB", "ዝቅተኛው የድጋፍ መጠን 100 ብር ነው"));
+    if (effectiveAmount < 50) {
+      toast.error(t("Minimum donation amount is 50 ETB", "ዝቅተኛው የድጋፍ መጠን 50 ብር ነው"));
       return;
     }
     if (!email || !firstName || !lastName) {
@@ -383,9 +384,9 @@ function DonatePage() {
                           </span>
                           <input
                             type="number"
-                            min="100"
+                            min="50"
                             step="50"
-                            placeholder={t("Enter custom amount in ETB (min. 100)", "ብጁ መጠን ያስገቡ (ቢያንስ 100)...")}
+                            placeholder={t("Enter custom amount in ETB (min. 50)", "ብጁ መጠን ያስገቡ (ቢያንስ 50)...")}
                             value={customAmount}
                             onChange={(e) => setCustomAmount(e.target.value)}
                             className="w-full rounded-2xl border-2 border-border bg-background pl-16 pr-5 py-3.5 text-base font-medium text-foreground placeholder:text-muted-foreground/60 focus:border-primary focus:outline-hidden focus:ring-4 focus:ring-primary/15"
