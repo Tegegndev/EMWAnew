@@ -187,12 +187,25 @@ function DonatePage() {
       toast.error(t("Minimum donation amount is 50 ETB", "ዝቅተኛው የድጋፍ መጠን 50 ብር ነው"));
       return;
     }
-    if (!email || !firstName || !lastName) {
+    const cleanEmail = email.trim();
+    const cleanFirstName = firstName.trim();
+    const cleanLastName = lastName.trim();
+
+    if (!cleanEmail || !cleanFirstName || !cleanLastName) {
       toast.error(t("Please fill in required contact details", "እባክዎን አስፈላጊውን መረጃ ይሙሉ"));
       return;
     }
 
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(cleanEmail)) {
+      toast.error(t("Please enter a valid email address", "እባክዎ ትክክለኛ የኢሜይል አድራሻ ያስገቡ"));
+      return;
+    }
+
     setIsSubmitting(true);
+
+    // Open a new tab immediately within user-initiated click context to avoid popup blocker issues
+    const paymentWindow = typeof window !== "undefined" ? window.open("about:blank", "_blank") : null;
 
     try {
       toast.info(
@@ -205,11 +218,11 @@ function DonatePage() {
       const result = await initializeDonation({
         data: {
           amount: effectiveAmount,
-          email,
-          firstName,
-          lastName,
-          phone,
-          notes,
+          email: cleanEmail,
+          firstName: cleanFirstName,
+          lastName: cleanLastName,
+          phone: phone.trim() || undefined,
+          notes: notes.trim() || undefined,
           isAnonymous,
           returnUrl: `${window.location.origin}/thank-you`,
         },
@@ -219,20 +232,28 @@ function DonatePage() {
         if (typeof window !== "undefined") {
           if (result.txRef) sessionStorage.setItem("emwa_last_tx_ref", result.txRef);
           sessionStorage.setItem("emwa_last_amount", String(effectiveAmount));
-          sessionStorage.setItem("emwa_last_donor_name", `${firstName} ${lastName}`.trim());
-          sessionStorage.setItem("emwa_last_donor_email", email.trim());
+          sessionStorage.setItem("emwa_last_donor_name", `${cleanFirstName} ${cleanLastName}`.trim());
+          sessionStorage.setItem("emwa_last_donor_email", cleanEmail);
         }
-        const opened = window.open(result.checkoutUrl, "_blank", "noopener,noreferrer");
-        if (!opened || opened.closed || typeof opened.closed === "undefined") {
-          window.location.href = result.checkoutUrl;
+
+        if (paymentWindow && !paymentWindow.closed) {
+          paymentWindow.location.href = result.checkoutUrl;
+        } else {
+          window.open(result.checkoutUrl, "_blank", "noopener,noreferrer") || (window.location.href = result.checkoutUrl);
         }
       } else {
+        if (paymentWindow && !paymentWindow.closed) {
+          paymentWindow.close();
+        }
         throw new Error(
           result.error ||
             t("Unable to initialize payment. Please try again.", "ክፍያውን ማከናወን አልተቻለም። እባክዎ እንደገና ይሞክሩ።"),
         );
       }
     } catch (err) {
+      if (paymentWindow && !paymentWindow.closed) {
+        paymentWindow.close();
+      }
       const msg =
         err instanceof Error
           ? err.message

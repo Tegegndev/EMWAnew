@@ -33,12 +33,42 @@ export interface VerifyDonationResult {
   error?: string;
 }
 
+const getChapaSecretKey = (): string => {
+  const env = typeof process !== "undefined" ? process.env : {};
+  const metaEnv = typeof import.meta !== "undefined" && import.meta.env ? import.meta.env : {};
+  const key =
+    env.CHAPA_SECRET_KEY ||
+    (metaEnv as Record<string, string | undefined>).VITE_CHAPA_SECRET_KEY ||
+    (metaEnv as Record<string, string | undefined>).CHAPA_SECRET_KEY ||
+    "CHASECK_TEST-fKGMgwXlDNj76afswCLd1PN6YoWN4Jjr";
+  return (key || "").trim();
+};
+
+const formatChapaErrorMessage = (payload: { message?: unknown }): string => {
+  if (!payload || !payload.message) return "Failed to initialize secure checkout.";
+  if (typeof payload.message === "string") return payload.message;
+  if (typeof payload.message === "object") {
+    try {
+      const messages: string[] = [];
+      for (const [, val] of Object.entries(payload.message as Record<string, unknown>)) {
+        if (Array.isArray(val)) {
+          messages.push(val.join(", "));
+        } else if (typeof val === "string") {
+          messages.push(val);
+        }
+      }
+      if (messages.length > 0) return messages.join(" | ");
+    } catch {
+      // fallback
+    }
+  }
+  return "Payment gateway reported a validation issue.";
+};
+
 export const initializeDonation = createServerFn({ method: "POST" })
   .validator((data: InitializeDonationPayload) => data)
   .handler(async ({ data }): Promise<InitializeDonationResult> => {
-    const secretKey =
-      process.env.CHAPA_SECRET_KEY ||
-      "CHASECK_TEST-fKGMgwXlDNj76afswCLd1PN6YoWN4Jjr";
+    const secretKey = getChapaSecretKey();
 
     if (!secretKey) {
       return {
@@ -54,17 +84,30 @@ export const initializeDonation = createServerFn({ method: "POST" })
       };
     }
 
-    if (!data.email || !data.firstName || !data.lastName) {
+    const email = (data.email || "").trim();
+    const firstName = (data.firstName || "").trim();
+    const lastName = (data.lastName || "").trim();
+
+    if (!email || !firstName || !lastName) {
       return {
         success: false,
         error: "Please provide your first name, last name, and a valid email address.",
       };
     }
 
+    // Clean phone number: keep numbers and optional leading +
+    let cleanPhone: string | undefined = undefined;
+    if (data.phone && data.phone.trim()) {
+      const formatted = data.phone.trim().replace(/[^\d+]/g, "");
+      if (formatted.length >= 9 && formatted.length <= 16) {
+        cleanPhone = formatted;
+      }
+    }
+
     const txRef = `EMWA-DONATION-${Date.now()}-${Math.random().toString(36).substring(2, 7).toUpperCase()}`;
 
     // Compute guaranteed return URL with tx_ref parameter
-    const rawBase = data.returnUrl || process.env.APP_BASE_URL || "http://localhost:5173";
+    const rawBase = data.returnUrl || (typeof process !== "undefined" ? process.env?.APP_BASE_URL : "") || "http://localhost:5173";
     const cleanOrigin = rawBase.split("?")[0].replace(/\/donate\/success\/?$/, "").replace(/\/thank-you\/?$/, "").replace(/\/$/, "");
     const returnUrl = `${cleanOrigin}/thank-you?tx_ref=${encodeURIComponent(txRef)}`;
 
@@ -72,16 +115,16 @@ export const initializeDonation = createServerFn({ method: "POST" })
       const response = await fetch("https://api.chapa.co/v1/transaction/initialize", {
         method: "POST",
         headers: {
-          Authorization: `Bearer ${secretKey.trim()}`,
+          Authorization: `Bearer ${secretKey}`,
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
           amount: String(data.amount),
           currency: "ETB",
-          email: data.email.trim(),
-          first_name: data.firstName.trim(),
-          last_name: data.lastName.trim(),
-          phone_number: data.phone?.trim() || undefined,
+          email,
+          first_name: firstName,
+          last_name: lastName,
+          phone_number: cleanPhone,
           tx_ref: txRef,
           return_url: returnUrl,
           customization: {
@@ -97,14 +140,16 @@ export const initializeDonation = createServerFn({ method: "POST" })
 
       const payload = (await response.json()) as {
         status?: string;
-        message?: string;
+        message?: unknown;
         data?: { checkout_url?: string };
       };
 
       if (!response.ok || payload.status !== "success" || !payload.data?.checkout_url) {
+        const errorDetail = formatChapaErrorMessage(payload);
+        console.warn("Chapa initialization response error:", payload);
         return {
           success: false,
-          error: payload.message || "Failed to initialize secure checkout.",
+          error: errorDetail,
         };
       }
 
@@ -125,9 +170,7 @@ export const initializeDonation = createServerFn({ method: "POST" })
 export const verifyDonation = createServerFn({ method: "POST" })
   .validator((data: { txRef: string }) => data)
   .handler(async ({ data }): Promise<VerifyDonationResult> => {
-    const secretKey =
-      process.env.CHAPA_SECRET_KEY ||
-      "CHASECK_TEST-fKGMgwXlDNj76afswCLd1PN6YoWN4Jjr";
+    const secretKey = getChapaSecretKey();
 
     if (!data.txRef) {
       return { success: false, error: "Transaction reference is required." };

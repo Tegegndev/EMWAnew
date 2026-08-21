@@ -18,6 +18,8 @@ const ROUTES = [
   "/privacy",
   "/terms",
   "/admin",
+  "/donate",
+  "/thank-you",
 ];
 
 function copyDirRecursive(src, dest) {

@@ -96,7 +96,6 @@ export function SiteFooter() {
                   <Link
                     to={l.to}
                     className="sf-link"
-                    {...(l.to === "/donate" ? { target: "_blank", rel: "noopener noreferrer" } : {})}
                   >
                     {t(l.label, {
                       About: "ስለ እኛ",
