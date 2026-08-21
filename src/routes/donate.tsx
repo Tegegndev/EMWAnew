@@ -222,7 +222,10 @@ function DonatePage() {
           sessionStorage.setItem("emwa_last_donor_name", `${firstName} ${lastName}`.trim());
           sessionStorage.setItem("emwa_last_donor_email", email.trim());
         }
-        window.location.href = result.checkoutUrl;
+        const opened = window.open(result.checkoutUrl, "_blank", "noopener,noreferrer");
+        if (!opened || opened.closed || typeof opened.closed === "undefined") {
+          window.location.href = result.checkoutUrl;
+        }
       } else {
         throw new Error(
           result.error ||

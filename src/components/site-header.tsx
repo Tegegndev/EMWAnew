@@ -108,6 +108,8 @@ export function SiteHeader() {
           <ThemeToggle />
           <Link
             to="/donate"
+            target="_blank"
+            rel="noopener noreferrer"
             className="group hidden h-10 shrink-0 items-center gap-2 whitespace-nowrap border border-[#dca332] bg-[#e5a933] px-4 label-mono !text-[8px] text-[#171513] shadow-[0_6px_18px_rgba(229,169,51,.18)] transition-all duration-300 hover:-translate-y-0.5 hover:bg-[#f0b83f] hover:shadow-[0_10px_24px_rgba(229,169,51,.28)] sm:inline-flex"
           >
             <Heart className="size-3.5 transition-transform duration-300 group-hover:scale-110 group-hover:fill-current" />
@@ -176,6 +178,8 @@ export function SiteHeader() {
             ))}
             <Link
               to="/donate"
+              target="_blank"
+              rel="noopener noreferrer"
               onClick={() => setOpen(false)}
               className="mt-2 flex items-center justify-center gap-2 bg-[#e5a933] px-5 py-3 label-mono text-[#171513]"
             >

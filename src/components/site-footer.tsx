@@ -93,7 +93,11 @@ export function SiteFooter() {
             <ul className="sf-col-list">
               {NAV_ORG.map((l) => (
                 <li key={l.to}>
-                  <Link to={l.to} className="sf-link">
+                  <Link
+                    to={l.to}
+                    className="sf-link"
+                    {...(l.to === "/donate" ? { target: "_blank", rel: "noopener noreferrer" } : {})}
+                  >
                     {t(l.label, {
                       About: "ስለ እኛ",
                       Programs: "ፕሮግራሞች",
