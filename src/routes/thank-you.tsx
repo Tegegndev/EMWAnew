@@ -29,8 +29,10 @@ export const Route = createFileRoute("/thank-you")({
       (typeof search.reference === "string" && search.reference.trim() !== "" && search.reference) ||
       (typeof search.transaction_id === "string" && search.transaction_id.trim() !== "" && search.transaction_id) ||
       "";
+    const isAnon = search.anon === "1" || search.is_anonymous === "true" || search.is_anonymous === true;
     return {
       tx_ref: rawRef,
+      anon: isAnon ? "1" : "0",
     };
   },
   head: () => ({
@@ -65,18 +67,24 @@ function ThankYouPage() {
       (typeof window !== "undefined" ? sessionStorage.getItem("emwa_last_tx_ref") : "") ||
       `EMWA-DONATION-${Date.now().toString().slice(-6)}`;
 
+    const isAnonymousFromStorage =
+      typeof window !== "undefined" && sessionStorage.getItem("emwa_last_is_anonymous") === "true";
+    const isAnon = search?.anon === "1" || isAnonymousFromStorage;
+
     const savedAmount =
       typeof window !== "undefined"
         ? parseFloat(sessionStorage.getItem("emwa_last_amount") || "2500") || 2500
         : 2500;
-    const savedName =
-      typeof window !== "undefined"
+    const savedName = isAnon
+      ? "Anonymous Supporter"
+      : typeof window !== "undefined"
         ? sessionStorage.getItem("emwa_last_donor_name") || "Valued Supporter"
         : "Valued Supporter";
-    const savedEmail =
-      typeof window !== "undefined"
-        ? sessionStorage.getItem("emwa_last_donor_email") || "donor@ethmwa.org"
-        : "donor@ethmwa.org";
+    const savedEmail = isAnon
+      ? undefined
+      : typeof window !== "undefined"
+        ? sessionStorage.getItem("emwa_last_donor_email") || undefined
+        : undefined;
 
     return {
       success: true,
@@ -87,6 +95,7 @@ function ThankYouPage() {
       receiptUrl: `https://chapa.link/payment-receipt/${encodeURIComponent(activeRef)}`,
       donorName: savedName,
       email: savedEmail,
+      isAnonymous: isAnon,
       date: new Date().toISOString(),
     };
   });
@@ -117,6 +126,13 @@ function ThankYouPage() {
       try {
         const res = await verifyDonation({ data: { txRef: activeRef } });
         if (isMounted && res) {
+          const isAnon =
+            res.isAnonymous ||
+            search?.anon === "1" ||
+            (typeof window !== "undefined" && sessionStorage.getItem("emwa_last_is_anonymous") === "true") ||
+            res.email?.startsWith("anonymous.") ||
+            res.donorName === "Anonymous Supporter";
+
           setResult((prev) => ({
             ...prev,
             ...res,
@@ -127,8 +143,9 @@ function ThankYouPage() {
             reference: res.reference || res.txRef || activeRef,
             receiptUrl: res.receiptUrl || prev.receiptUrl,
             paymentMethod: res.paymentMethod || prev.paymentMethod,
-            donorName: res.donorName || prev.donorName,
-            email: res.email || prev.email,
+            donorName: isAnon ? "Anonymous Supporter" : res.donorName || prev.donorName,
+            email: isAnon ? undefined : res.email || prev.email,
+            isAnonymous: isAnon,
             date: res.date || prev.date,
           }));
         }
@@ -140,7 +157,7 @@ function ThankYouPage() {
     return () => {
       isMounted = false;
     };
-  }, [search?.tx_ref]);
+  }, [search?.tx_ref, search?.anon]);
 
   const handleShare = () => {
     const text =
@@ -161,6 +178,12 @@ function ThankYouPage() {
     try {
       const { jsPDF } = await import("jspdf");
       const doc = new jsPDF({ unit: "mm", format: "a4" });
+
+      const isAnon =
+        result.isAnonymous ||
+        !result.email ||
+        result.email.startsWith("anonymous.") ||
+        result.donorName === "Anonymous Supporter";
 
       const amountStr = result.amount ? `${result.amount.toLocaleString()} ${result.currency || "ETB"}` : "N/A";
       const dateStr = result.date ? new Date(result.date).toLocaleDateString() : new Date().toLocaleDateString();
@@ -199,45 +222,53 @@ function ThankYouPage() {
       doc.setFontSize(11);
       doc.setTextColor(30, 30, 30);
 
-      doc.setFont("helvetica", "bold");
-      doc.text("Donor Name:", 20, 90);
-      doc.setFont("helvetica", "normal");
-      doc.text(result.donorName || "Valued Supporter", 70, 90);
+      let currentY = 90;
 
-      if (result.email) {
+      doc.setFont("helvetica", "bold");
+      doc.text("Donor Name:", 20, currentY);
+      doc.setFont("helvetica", "normal");
+      doc.text(isAnon ? "Anonymous Donor (Protected)" : (result.donorName || "Valued Supporter"), 70, currentY);
+
+      if (!isAnon && result.email) {
+        currentY += 10;
         doc.setFont("helvetica", "bold");
-        doc.text("Email Address:", 20, 100);
+        doc.text("Email Address:", 20, currentY);
         doc.setFont("helvetica", "normal");
-        doc.text(result.email, 70, 100);
+        doc.text(result.email, 70, currentY);
       }
 
+      currentY += 10;
       doc.setFont("helvetica", "bold");
-      doc.text("Contribution Amount:", 20, 110);
+      doc.text("Contribution Amount:", 20, currentY);
       doc.setFont("helvetica", "bold");
       doc.setTextColor(140, 45, 60);
-      doc.text(amountStr, 70, 110);
+      doc.text(amountStr, 70, currentY);
 
+      currentY += 10;
       doc.setFont("helvetica", "bold");
       doc.setTextColor(30, 30, 30);
-      doc.text("Purpose / Cause:", 20, 120);
+      doc.text("Purpose / Cause:", 20, currentY);
       doc.setFont("helvetica", "normal");
-      doc.text("Empowering Women in Ethiopian Media & Journalist Safety Fund", 70, 120);
+      doc.text("Empowering Women in Ethiopian Media & Journalist Safety Fund", 70, currentY);
 
       // Line separator
-      doc.line(20, 130, 190, 130);
+      currentY += 10;
+      doc.line(20, currentY, 190, currentY);
 
       // Appreciation Note
+      currentY += 12;
       doc.setFontSize(10);
       doc.setTextColor(60, 60, 60);
       doc.text(
         "On behalf of all women journalists, media professionals, and fellows across Ethiopia,",
         20,
-        142,
+        currentY,
       );
+      currentY += 6;
       doc.text(
         "we extend our heartfelt gratitude for your generous support and commitment to gender equality in journalism.",
         20,
-        148,
+        currentY,
       );
 
       // Legal CSO Notice
@@ -363,16 +394,26 @@ function ThankYouPage() {
                     </span>
                   </div>
 
-                  {result.donorName && (
+                  <div>
+                    <span className="text-muted-foreground text-xs block mb-0.5 label-mono uppercase">
+                      {t("Donor", "ደጋፊ")}
+                    </span>
+                    <span className="text-foreground font-semibold">
+                      {result.isAnonymous ? t("Anonymous Supporter", "ስም-አልባ ደጋፊ") : (result.donorName || t("Valued Supporter", "የከበረ ደጋፊ"))}
+                    </span>
+                  </div>
+
+                  {result.isAnonymous || !result.email || result.email.startsWith("anonymous.") ? (
                     <div>
                       <span className="text-muted-foreground text-xs block mb-0.5 label-mono uppercase">
-                        {t("Donor", "ደጋፊ")}
+                        {t("Receipt Delivery", "የደረሰኝ አሰጣጥ")}
                       </span>
-                      <span className="text-foreground font-semibold">{result.donorName}</span>
+                      <span className="text-foreground font-semibold inline-flex items-center gap-1.5 text-emerald-600 dark:text-emerald-400 text-xs sm:text-sm">
+                        <Check className="size-3.5" />
+                        {t("Direct PDF Download (No Email Required)", "በቀጥታ የሚወርድ PDF (ኢሜይል አያስፈልግም)")}
+                      </span>
                     </div>
-                  )}
-
-                  {result.email && (
+                  ) : (
                     <div>
                       <span className="text-muted-foreground text-xs block mb-0.5 label-mono uppercase">
                         {t("Receipt Sent To", "ደረሰኝ የተላከበት")}

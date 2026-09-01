@@ -6,8 +6,10 @@ import {
   Check,
   Copy,
   CreditCard,
+  EyeOff,
   Heart,
   HelpCircle,
+  Lock,
   Radio,
   Shield,
   ShieldAlert,
@@ -187,19 +189,22 @@ function DonatePage() {
       toast.error(t("Minimum donation amount is 50 ETB", "ዝቅተኛው የድጋፍ መጠን 50 ብር ነው"));
       return;
     }
+
     const cleanEmail = email.trim();
     const cleanFirstName = firstName.trim();
     const cleanLastName = lastName.trim();
 
-    if (!cleanEmail || !cleanFirstName || !cleanLastName) {
-      toast.error(t("Please fill in required contact details", "እባክዎን አስፈላጊውን መረጃ ይሙሉ"));
-      return;
-    }
+    if (!isAnonymous) {
+      if (!cleanEmail || !cleanFirstName || !cleanLastName) {
+        toast.error(t("Please fill in required contact details", "እባክዎን አስፈላጊውን መረጃ ይሙሉ"));
+        return;
+      }
 
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(cleanEmail)) {
-      toast.error(t("Please enter a valid email address", "እባክዎ ትክክለኛ የኢሜይል አድራሻ ያስገቡ"));
-      return;
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!emailRegex.test(cleanEmail)) {
+        toast.error(t("Please enter a valid email address", "እባክዎ ትክክለኛ የኢሜይል አድራሻ ያስገቡ"));
+        return;
+      }
     }
 
     setIsSubmitting(true);
@@ -218,10 +223,10 @@ function DonatePage() {
       const result = await initializeDonation({
         data: {
           amount: effectiveAmount,
-          email: cleanEmail,
-          firstName: cleanFirstName,
-          lastName: cleanLastName,
-          phone: phone.trim() || undefined,
+          email: isAnonymous ? undefined : cleanEmail,
+          firstName: isAnonymous ? "Anonymous" : cleanFirstName,
+          lastName: isAnonymous ? "Supporter" : cleanLastName,
+          phone: isAnonymous ? undefined : (phone.trim() || undefined),
           notes: notes.trim() || undefined,
           isAnonymous,
           returnUrl: `${window.location.origin}/thank-you`,
@@ -232,8 +237,16 @@ function DonatePage() {
         if (typeof window !== "undefined") {
           if (result.txRef) sessionStorage.setItem("emwa_last_tx_ref", result.txRef);
           sessionStorage.setItem("emwa_last_amount", String(effectiveAmount));
-          sessionStorage.setItem("emwa_last_donor_name", `${cleanFirstName} ${cleanLastName}`.trim());
-          sessionStorage.setItem("emwa_last_donor_email", cleanEmail);
+          sessionStorage.setItem("emwa_last_is_anonymous", isAnonymous ? "true" : "false");
+          sessionStorage.setItem(
+            "emwa_last_donor_name",
+            isAnonymous ? "Anonymous Supporter" : `${cleanFirstName} ${cleanLastName}`.trim(),
+          );
+          if (!isAnonymous && cleanEmail) {
+            sessionStorage.setItem("emwa_last_donor_email", cleanEmail);
+          } else {
+            sessionStorage.removeItem("emwa_last_donor_email");
+          }
         }
 
         if (paymentWindow && !paymentWindow.closed) {
@@ -419,67 +432,89 @@ function DonatePage() {
                       </div>
                     </div>
 
-                    {/* Donor Information */}
+                    {/* Donor Information & Anonymous Switch */}
                     <div className="space-y-4 pt-4 border-t border-border/80">
-                      <label className="block text-xs font-semibold text-muted-foreground label-mono uppercase">
-                        {t("Donor Contact Details", "የእርስዎ የመገናኛ መረጃ")}
-                      </label>
-                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
-                        <input
-                          type="text"
-                          required
-                          placeholder={t("First Name *", "ስም *")}
-                          value={firstName}
-                          onChange={(e) => setFirstName(e.target.value)}
-                          className="w-full rounded-xl border border-border bg-background px-4 py-3 text-sm sm:text-base text-foreground placeholder:text-muted-foreground/60 focus:border-primary focus:outline-hidden focus:ring-2 focus:ring-primary/20"
-                        />
-                        <input
-                          type="text"
-                          required
-                          placeholder={t("Last Name *", "የአባት ስም *")}
-                          value={lastName}
-                          onChange={(e) => setLastName(e.target.value)}
+                      <div className="flex items-center justify-between gap-3">
+                        <label className="text-xs font-semibold text-muted-foreground label-mono uppercase">
+                          {isAnonymous ? t("Anonymous Donation", "ስም-አልባ ድጋፍ") : t("Donor Details", "የደጋፊው መረጃ")}
+                        </label>
+                        <button
+                          type="button"
+                          onClick={() => setIsAnonymous(!isAnonymous)}
+                          className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium border transition-all cursor-pointer select-none ${
+                            isAnonymous
+                              ? "bg-primary text-primary-foreground border-primary shadow-xs"
+                              : "bg-background text-muted-foreground border-border hover:text-foreground hover:border-primary/40"
+                          }`}
+                        >
+                          <EyeOff className="size-3.5" />
+                          <span>{t("Donate Anonymously", "ስም-አልባ")}</span>
+                        </button>
+                      </div>
+
+                      {/* If Anonymous: minimal privacy banner */}
+                      {isAnonymous ? (
+                        <div className="flex items-center gap-2.5 rounded-xl border border-border bg-muted/40 px-4 py-3 text-xs text-muted-foreground">
+                          <EyeOff className="size-4 text-primary shrink-0" />
+                          <span>
+                            {t(
+                              "No personal info required. You can download your official receipt directly on-screen.",
+                              "ምንም መረጃ አያስፈልግም። ህጋዊ ደረሰኝዎን በስክሪኑ ላይ በቀጥታ ማውረድ ይችላሉ።",
+                            )}
+                          </span>
+                        </div>
+                      ) : (
+                        /* If Identified: standard clean inputs */
+                        <div className="space-y-3.5">
+                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+                            <input
+                              type="text"
+                              required
+                              placeholder={t("First Name *", "ስም *")}
+                              value={firstName}
+                              onChange={(e) => setFirstName(e.target.value)}
+                              className="w-full rounded-xl border border-border bg-background px-4 py-3 text-sm sm:text-base text-foreground placeholder:text-muted-foreground/60 focus:border-primary focus:outline-hidden focus:ring-2 focus:ring-primary/20"
+                            />
+                            <input
+                              type="text"
+                              required
+                              placeholder={t("Last Name *", "የአባት ስም *")}
+                              value={lastName}
+                              onChange={(e) => setLastName(e.target.value)}
+                              className="w-full rounded-xl border border-border bg-background px-4 py-3 text-sm sm:text-base text-foreground placeholder:text-muted-foreground/60 focus:border-primary focus:outline-hidden focus:ring-2 focus:ring-primary/20"
+                            />
+                          </div>
+
+                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+                            <input
+                              type="email"
+                              required
+                              placeholder={t("Email address for receipt *", "የኢሜይል አድራሻ ለደረሰኝ *")}
+                              value={email}
+                              onChange={(e) => setEmail(e.target.value)}
+                              className="w-full rounded-xl border border-border bg-background px-4 py-3 text-sm sm:text-base text-foreground placeholder:text-muted-foreground/60 focus:border-primary focus:outline-hidden focus:ring-2 focus:ring-primary/20"
+                            />
+                            <input
+                              type="tel"
+                              placeholder={t("Phone number (optional)", "ስልክ ቁጥር (አማራጭ)")}
+                              value={phone}
+                              onChange={(e) => setPhone(e.target.value)}
+                              className="w-full rounded-xl border border-border bg-background px-4 py-3 text-sm sm:text-base text-foreground placeholder:text-muted-foreground/60 focus:border-primary focus:outline-hidden focus:ring-2 focus:ring-primary/20"
+                            />
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Optional message / dedication */}
+                      <div>
+                        <textarea
+                          rows={2}
+                          placeholder={t("Add a message or dedication (optional)", "አጭር መልዕክት ወይም ማስታወሻ (አማራጭ)")}
+                          value={notes}
+                          onChange={(e) => setNotes(e.target.value)}
                           className="w-full rounded-xl border border-border bg-background px-4 py-3 text-sm sm:text-base text-foreground placeholder:text-muted-foreground/60 focus:border-primary focus:outline-hidden focus:ring-2 focus:ring-primary/20"
                         />
                       </div>
-
-                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
-                        <input
-                          type="email"
-                          required
-                          placeholder={t("Email address for receipt *", "የኢሜይል አድራሻ ለደረሰኝ *")}
-                          value={email}
-                          onChange={(e) => setEmail(e.target.value)}
-                          className="w-full rounded-xl border border-border bg-background px-4 py-3 text-sm sm:text-base text-foreground placeholder:text-muted-foreground/60 focus:border-primary focus:outline-hidden focus:ring-2 focus:ring-primary/20"
-                        />
-                        <input
-                          type="tel"
-                          placeholder={t("Phone number (optional)", "ስልክ ቁጥር (አማራጭ)")}
-                          value={phone}
-                          onChange={(e) => setPhone(e.target.value)}
-                          className="w-full rounded-xl border border-border bg-background px-4 py-3 text-sm sm:text-base text-foreground placeholder:text-muted-foreground/60 focus:border-primary focus:outline-hidden focus:ring-2 focus:ring-primary/20"
-                        />
-                      </div>
-
-                      <textarea
-                        rows={2}
-                        placeholder={t("Add a message or dedication (optional)", "አጭር መልዕክት ወይም ማስታወሻ (አማራጭ)")}
-                        value={notes}
-                        onChange={(e) => setNotes(e.target.value)}
-                        className="w-full rounded-xl border border-border bg-background px-4 py-3 text-sm sm:text-base text-foreground placeholder:text-muted-foreground/60 focus:border-primary focus:outline-hidden focus:ring-2 focus:ring-primary/20"
-                      />
-
-                      <label className="flex items-center gap-2.5 cursor-pointer pt-1">
-                        <input
-                          type="checkbox"
-                          checked={isAnonymous}
-                          onChange={(e) => setIsAnonymous(e.target.checked)}
-                          className="rounded-md border-border text-primary focus:ring-primary size-4.5"
-                        />
-                        <span className="text-xs sm:text-sm text-muted-foreground">
-                          {t("Make this an anonymous donation", "ስሜ እንዳይገለጽ እፈልጋለሁ")}
-                        </span>
-                      </label>
                     </div>
 
                     {/* Submit Button */}

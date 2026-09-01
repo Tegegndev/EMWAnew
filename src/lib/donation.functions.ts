@@ -2,9 +2,9 @@ import { createServerFn } from "@tanstack/react-start";
 
 export interface InitializeDonationPayload {
   amount: number;
-  email: string;
-  firstName: string;
-  lastName: string;
+  email?: string;
+  firstName?: string;
+  lastName?: string;
   phone?: string;
   notes?: string;
   isAnonymous?: boolean;
@@ -30,6 +30,7 @@ export interface VerifyDonationResult {
   donorName?: string;
   email?: string;
   date?: string;
+  isAnonymous?: boolean;
   error?: string;
 }
 
@@ -84,32 +85,43 @@ export const initializeDonation = createServerFn({ method: "POST" })
       };
     }
 
-    const email = (data.email || "").trim();
-    const firstName = (data.firstName || "").trim();
-    const lastName = (data.lastName || "").trim();
+    const isAnonymous = Boolean(data.isAnonymous);
+    const txRef = `EMWA-DONATION-${Date.now()}-${Math.random().toString(36).substring(2, 7).toUpperCase()}`;
 
-    if (!email || !firstName || !lastName) {
-      return {
-        success: false,
-        error: "Please provide your first name, last name, and a valid email address.",
-      };
+    let email = (data.email || "").trim();
+    let firstName = (data.firstName || "").trim();
+    let lastName = (data.lastName || "").trim();
+
+    if (isAnonymous) {
+      if (!firstName) firstName = "Anonymous";
+      if (!lastName) lastName = "Supporter";
+      if (!email) {
+        // Generate anonymous placeholder email for Chapa gateway compliance
+        const uniqueId = txRef.toLowerCase().replace(/[^a-z0-9]/g, "");
+        email = `anonymous.${uniqueId}@ethmwa.org`;
+      }
+    } else {
+      if (!email || !firstName || !lastName) {
+        return {
+          success: false,
+          error: "Please provide your first name, last name, and a valid email address.",
+        };
+      }
     }
 
     // Clean phone number: keep numbers and optional leading +
     let cleanPhone: string | undefined = undefined;
-    if (data.phone && data.phone.trim()) {
+    if (!isAnonymous && data.phone && data.phone.trim()) {
       const formatted = data.phone.trim().replace(/[^\d+]/g, "");
       if (formatted.length >= 9 && formatted.length <= 16) {
         cleanPhone = formatted;
       }
     }
 
-    const txRef = `EMWA-DONATION-${Date.now()}-${Math.random().toString(36).substring(2, 7).toUpperCase()}`;
-
     // Compute guaranteed return URL with tx_ref parameter
     const rawBase = data.returnUrl || (typeof process !== "undefined" ? process.env?.APP_BASE_URL : "") || "http://localhost:5173";
     const cleanOrigin = rawBase.split("?")[0].replace(/\/donate\/success\/?$/, "").replace(/\/thank-you\/?$/, "").replace(/\/$/, "");
-    const returnUrl = `${cleanOrigin}/thank-you?tx_ref=${encodeURIComponent(txRef)}`;
+    const returnUrl = `${cleanOrigin}/thank-you?tx_ref=${encodeURIComponent(txRef)}&anon=${isAnonymous ? "1" : "0"}`;
 
     try {
       const response = await fetch("https://api.chapa.co/v1/transaction/initialize", {
@@ -128,11 +140,11 @@ export const initializeDonation = createServerFn({ method: "POST" })
           tx_ref: txRef,
           return_url: returnUrl,
           customization: {
-            title: "EMWA Donation",
+            title: isAnonymous ? "EMWA Anonymous Donation" : "EMWA Donation",
             description: "Supporting Women in Ethiopian Media",
           },
           meta: {
-            is_anonymous: data.isAnonymous ? "true" : "false",
+            is_anonymous: isAnonymous ? "true" : "false",
             notes: data.notes || "",
           },
         }),
@@ -201,6 +213,7 @@ export const verifyDonation = createServerFn({ method: "POST" })
           payment_method?: string;
           created_at?: string;
           tx_ref?: string;
+          meta?: { is_anonymous?: string };
         };
       };
 
@@ -215,6 +228,11 @@ export const verifyDonation = createServerFn({ method: "POST" })
       const isSuccess = txData.status === "success";
       const reference = txData.reference || data.txRef;
 
+      const isAnon =
+        txData.meta?.is_anonymous === "true" ||
+        (txData.email && txData.email.startsWith("anonymous.")) ||
+        (txData.first_name === "Anonymous" && txData.last_name === "Supporter");
+
       return {
         success: isSuccess,
         status: txData.status,
@@ -224,8 +242,9 @@ export const verifyDonation = createServerFn({ method: "POST" })
         reference,
         paymentMethod: txData.method || txData.payment_method,
         receiptUrl: `https://chapa.link/payment-receipt/${encodeURIComponent(reference)}`,
-        donorName: `${txData.first_name || ""} ${txData.last_name || ""}`.trim(),
-        email: txData.email,
+        donorName: isAnon ? "Anonymous Supporter" : `${txData.first_name || ""} ${txData.last_name || ""}`.trim(),
+        email: isAnon ? undefined : txData.email,
+        isAnonymous: isAnon,
         date: txData.created_at || new Date().toISOString(),
       };
     } catch (err) {
