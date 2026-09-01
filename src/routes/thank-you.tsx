@@ -380,30 +380,18 @@ function ThankYouPage() {
       `}</style>
 
       <section className="py-12 md:py-20 bg-gradient-to-b from-primary/5 via-background to-background min-h-[90vh]">
-        <div className="site-container max-w-5xl">
+        <div className="site-container max-w-6xl w-full">
           {/* Main 2-Column Grid */}
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
             {/* Left Column: Voucher Booklet Style Receipt (8 Cols) */}
-            <div className="lg:col-span-8 animate-voucher-in">
-              {/* Booklet Container with Left Spine Binding */}
+            <div className="lg:col-span-8 animate-voucher-in w-full">
+              {/* Receipt Voucher Main Card */}
               <div
                 id="printable-voucher-card"
-                className="relative flex rounded-2xl md:rounded-3xl border border-neutral-300 dark:border-neutral-700 bg-card shadow-[0_20px_50px_rgba(0,0,0,0.14)] overflow-hidden"
+                className="relative flex flex-col rounded-2xl md:rounded-3xl border border-neutral-300 dark:border-neutral-700 bg-white text-neutral-900 shadow-[0_20px_50px_rgba(0,0,0,0.14)] overflow-hidden w-full"
               >
-                {/* Left Book Spine / Binding Roll */}
-                <div className="hidden sm:flex flex-col items-center justify-between w-10 md:w-12 book-spiral-binding shrink-0 py-6 border-r border-neutral-300 dark:border-neutral-700 relative z-20">
-                  <div className="space-y-4">
-                    {Array.from({ length: 8 }).map((_, i) => (
-                      <div
-                        key={i}
-                        className="size-2.5 rounded-full bg-neutral-400 dark:bg-neutral-800 shadow-inner border border-neutral-500/30"
-                      />
-                    ))}
-                  </div>
-                </div>
-
-                {/* Right Voucher Slip Main Paper */}
-                <div className="flex-1 flex flex-col justify-between bg-white text-neutral-900 relative overflow-hidden">
+                {/* Voucher Slip Content */}
+                <div className="flex-1 flex flex-col justify-between relative overflow-hidden">
                   {/* Top Red Ribbon Curved Wave Accent */}
                   <div className="relative bg-[#8C2D3C] text-white pt-5 pb-7 px-5 sm:px-8">
                     {/* SVG Smooth Wave at the Bottom */}
