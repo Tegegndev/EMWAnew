@@ -13,7 +13,6 @@ import {
   MessageSquare,
   Printer,
   Radio,
-  RotateCcw,
   Send,
   Share2,
   Shield,
@@ -57,21 +56,6 @@ function ThankYouPage() {
   const [isDownloading, setIsDownloading] = useState(false);
   const [copiedShare, setCopiedShare] = useState(false);
   const [copiedTxRef, setCopiedTxRef] = useState(false);
-  const [printKey, setPrintKey] = useState(1);
-  const [isPrinting, setIsPrinting] = useState(true);
-
-  // Trigger sound / visual timer for the printing simulation
-  useEffect(() => {
-    setIsPrinting(true);
-    const timer = setTimeout(() => {
-      setIsPrinting(false);
-    }, 2000);
-    return () => clearTimeout(timer);
-  }, [printKey]);
-
-  const handleReplayPrint = () => {
-    setPrintKey((prev) => prev + 1);
-  };
 
   // Extract reference ID from URL or Session Storage
   const [result, setResult] = useState<VerifyDonationResult>(() => {
@@ -334,54 +318,20 @@ function ThankYouPage() {
 
   return (
     <PageShell>
-      {/* Custom Keyframe Styles for the Receipt Printer Machine */}
+      {/* Smooth Slide Down Keyframe */}
       <style>{`
-        @keyframes thermalPrintFeed {
+        @keyframes receiptSlideDown {
           0% {
-            transform: translateY(-85%);
-            clip-path: inset(0 0 88% 0);
-            opacity: 0.3;
-          }
-          25% {
-            transform: translateY(-65%);
-            clip-path: inset(0 0 65% 0);
-            opacity: 0.8;
-          }
-          50% {
-            transform: translateY(-40%);
-            clip-path: inset(0 0 40% 0);
-            opacity: 0.95;
-          }
-          75% {
-            transform: translateY(-15%);
-            clip-path: inset(0 0 15% 0);
-            opacity: 1;
+            transform: translateY(-40px);
+            opacity: 0;
           }
           100% {
             transform: translateY(0);
-            clip-path: inset(0 0 0 0);
             opacity: 1;
           }
         }
-        .animate-thermal-print {
-          animation: thermalPrintFeed 1.6s cubic-bezier(0.25, 1, 0.5, 1) forwards;
-        }
-        @keyframes stampPopIn {
-          0%, 60% {
-            transform: scale(2.5) rotate(-30deg);
-            opacity: 0;
-          }
-          85% {
-            transform: scale(0.9) rotate(-10deg);
-            opacity: 0.9;
-          }
-          100% {
-            transform: scale(1) rotate(-12deg);
-            opacity: 1;
-          }
-        }
-        .animate-stamp-verified {
-          animation: stampPopIn 2s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+        .animate-receipt-in {
+          animation: receiptSlideDown 0.7s cubic-bezier(0.16, 1, 0.3, 1) forwards;
         }
         @media print {
           body * {
@@ -401,109 +351,72 @@ function ThankYouPage() {
 
       <section className="py-12 md:py-20 bg-gradient-to-b from-primary/5 via-background to-background min-h-[90vh]">
         <div className="site-container max-w-5xl">
-          {/* Top Success Banner */}
-          <div className="text-center max-w-2xl mx-auto mb-10 space-y-3">
-            <div className="inline-flex items-center gap-2 rounded-full border border-emerald-500/30 bg-emerald-500/10 px-3.5 py-1 text-xs font-bold text-emerald-600 dark:text-emerald-400 label-mono uppercase">
-              <CheckCircle2 className="size-4" />
-              <span>{t("Payment Successfully Verified", "ክፍያው በተሳካ ሁኔታ ተረጋግጧል")}</span>
-            </div>
-
-            <h1 className="font-display text-3xl sm:text-4xl md:text-5xl font-bold text-foreground tracking-tight">
-              {language === "am" ? (
-                <>
-                  ለድጋፍዎ <span className="italic text-primary">ከልብ እናመሰግናለን!</span>
-                </>
-              ) : (
-                <>
-                  Thank You for Your <span className="italic text-primary">Generous Gift!</span>
-                </>
-              )}
-            </h1>
-
-            <p className="text-sm sm:text-base text-muted-foreground leading-relaxed">
-              {t(
-                "Your contribution empowers women journalists with legal aid, safety resources, and investigative reporting grants across Ethiopia.",
-                "ያደረጉት አስተዋጽዖ ለሴት ጋዜጠኞች ደህንነት፣ ለህግ ጥበቃ እና ለምርመራ ጋዜጠኝነት ስኮላርሺፕ በቀጥታ ይውላል።",
-              )}
-            </p>
-          </div>
-
-          {/* Main 2-Column Grid: Animated Receipt Dispenser + Impact & Actions */}
+          {/* Main 2-Column Grid */}
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
-            {/* Left Column: The Receipt Printing Machine (7 Cols) */}
+            {/* Left Column: The Digital Receipt Card with Big Thank You Inside (7 Cols) */}
             <div className="lg:col-span-7">
-              {/* POS Machine Dispenser Top Bar */}
-              <div className="relative z-30 mx-auto w-[94%] rounded-t-2xl bg-neutral-900 dark:bg-neutral-950 px-5 py-3.5 shadow-2xl border-t border-x border-neutral-700">
-                <div className="flex items-center justify-between gap-2">
-                  <div className="flex items-center gap-2.5">
-                    {isPrinting ? (
-                      <span className="size-2.5 rounded-full bg-amber-400 animate-ping" />
-                    ) : (
-                      <span className="size-2.5 rounded-full bg-emerald-500 shadow-[0_0_8px_#10b981]" />
-                    )}
-                    <span className="text-[11px] font-mono font-semibold uppercase tracking-wider text-neutral-200">
-                      {isPrinting
-                        ? t("PRINTING RECEIPT...", "ደረሰኝ በማተም ላይ...")
-                        : t("EMWA RECEIPT DISPENSED", "የተረጋገጠ ደረሰኝ")}
-                    </span>
-                  </div>
-
-                  <button
-                    type="button"
-                    onClick={handleReplayPrint}
-                    className="inline-flex items-center gap-1.5 text-[10px] font-mono uppercase bg-neutral-800 hover:bg-neutral-700 text-neutral-300 px-2.5 py-1 rounded-md border border-neutral-600 transition-colors cursor-pointer"
-                    title={t("Replay Print Animation", "እንደገና አትም")}
-                  >
-                    <RotateCcw className="size-3" />
-                    <span>{t("Re-print", "እንደገና")}</span>
-                  </button>
-                </div>
-                {/* Physical Slit opening */}
-                <div className="mt-2.5 h-1.5 w-full rounded-full bg-black shadow-[inset_0_2px_4px_rgba(0,0,0,0.9)]" />
-              </div>
-
-              {/* The Animated Receipt Paper rolling out from the slot */}
-              <div
-                key={printKey}
-                className="relative z-10 -mt-1 animate-thermal-print origin-top overflow-hidden"
-              >
+              <div className="animate-receipt-in">
                 <div
                   id="printable-receipt-card"
-                  className="rounded-b-3xl border-x-2 border-b-2 border-border/90 bg-card p-6 sm:p-9 shadow-[0_25px_60px_rgba(0,0,0,0.16)] relative overflow-hidden"
+                  className="rounded-3xl border-2 border-border/90 bg-card p-6 sm:p-9 shadow-[0_25px_60px_rgba(0,0,0,0.12)] relative overflow-hidden"
                 >
-                  {/* Subtle Background Watermark Stamp with pop-in animation */}
-                  <div className="absolute right-4 top-1/3 border-4 border-emerald-500/30 text-emerald-600 dark:text-emerald-400/30 rounded-2xl px-5 py-2 pointer-events-none select-none animate-stamp-verified">
+                  {/* Subtle Background Watermark Stamp */}
+                  <div className="absolute right-4 top-1/2 -translate-y-1/2 -rotate-12 border-4 border-emerald-500/20 text-emerald-600/20 dark:text-emerald-400/20 rounded-2xl px-5 py-2 pointer-events-none select-none">
                     <span className="font-display font-extrabold text-2xl sm:text-3xl tracking-widest uppercase">
                       VERIFIED & PAID
                     </span>
                   </div>
 
-                  {/* Receipt Header */}
-                  <div className="flex items-start justify-between border-b-2 border-dashed border-border/80 pb-5">
-                    <div>
-                      <div className="flex items-center gap-2">
-                        <div className="size-7 rounded-lg bg-primary/10 text-primary flex items-center justify-center font-bold font-display text-sm">
-                          E
-                        </div>
-                        <span className="font-display font-bold text-base text-foreground tracking-tight">
-                          ETHIOPIAN MEDIA WOMEN ASSOCIATION
-                        </span>
-                      </div>
-                      <p className="text-[11px] text-muted-foreground mt-1 label-mono">
-                        {t("ACSO Registered CSO No. 0000 • Addis Ababa, Ethiopia", "በሲቪል ማህበረሰብ ድርጅቶች ባለስልጣን የተመዘገበ CSO")}
-                      </p>
+                  {/* Top Big Thank You Message INSIDE Receipt */}
+                  <div className="text-center pb-6 border-b-2 border-dashed border-border/80">
+                    <div className="inline-flex items-center justify-center size-14 rounded-2xl bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 mb-3.5 mx-auto ring-8 ring-emerald-500/10">
+                      <CheckCircle2 className="size-8" />
                     </div>
 
-                    <div className="text-right shrink-0">
-                      <span className="inline-flex items-center gap-1 text-[11px] font-bold text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 px-2.5 py-1 rounded-md label-mono uppercase">
-                        <Check className="size-3" />
-                        {t("Paid", "ተከፍሏል")}
+                    <div className="inline-flex items-center gap-1.5 rounded-full border border-emerald-500/30 bg-emerald-500/10 px-3 py-0.5 text-xs font-bold text-emerald-600 dark:text-emerald-400 label-mono uppercase mb-2">
+                      <BadgeCheck className="size-3.5" />
+                      <span>{t("Payment Successfully Verified", "ክፍያው በተሳካ ሁኔታ ተረጋግጧል")}</span>
+                    </div>
+
+                    <h1 className="font-display text-2xl sm:text-4xl font-extrabold text-foreground tracking-tight">
+                      {language === "am" ? (
+                        <>
+                          ለድጋፍዎ <span className="italic text-primary">ከልብ እናመሰግናለን!</span>
+                        </>
+                      ) : (
+                        <>
+                          Thank You for Your <span className="italic text-primary">Generous Support!</span>
+                        </>
+                      )}
+                    </h1>
+
+                    <p className="text-xs sm:text-sm text-muted-foreground mt-2 max-w-md mx-auto leading-relaxed">
+                      {t(
+                        "Your contribution directly fuels legal defense, emergency safety resources, and investigative reporting grants for female journalists across Ethiopia.",
+                        "ያደረጉት አስተዋጽዖ ለሴት ጋዜጠኞች ደህንነት፣ ለህግ ጥበቃ እና ለምርመራ ጋዜጠኝነት ስኮላርሺፕ በቀጥታ ይውላል።",
+                      )}
+                    </p>
+                  </div>
+
+                  {/* Receipt Association Title */}
+                  <div className="py-4 border-b border-dashed border-border/80 flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <div className="size-7 rounded-lg bg-primary/10 text-primary flex items-center justify-center font-bold font-display text-sm">
+                        E
+                      </div>
+                      <span className="font-display font-bold text-sm sm:text-base text-foreground tracking-tight">
+                        ETHIOPIAN MEDIA WOMEN ASSOCIATION
                       </span>
                     </div>
+
+                    <span className="inline-flex items-center gap-1 text-xs font-bold text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 px-2.5 py-1 rounded-md label-mono uppercase shrink-0">
+                      <Check className="size-3" />
+                      {t("Completed", "ተጠናቋል")}
+                    </span>
                   </div>
 
                   {/* Main Amount Callout */}
-                  <div className="py-6 border-b border-dashed border-border/80 flex items-center justify-between">
+                  <div className="py-5 border-b border-dashed border-border/80 flex items-center justify-between">
                     <div>
                       <span className="text-xs uppercase label-mono text-muted-foreground font-semibold block mb-0.5">
                         {t("Amount Contributed", "የተበረከተው ድጋፍ መጠን")}
@@ -514,10 +427,10 @@ function ThankYouPage() {
                     </div>
                     <div className="text-right">
                       <span className="text-xs uppercase label-mono text-muted-foreground font-semibold block mb-0.5">
-                        {t("Payment Method", "የክፍያ መንገድ")}
+                        {t("Payment Channel", "የክፍያ መንገድ")}
                       </span>
                       <span className="text-sm font-semibold uppercase text-foreground font-mono">
-                        {result.paymentMethod || "Chapa Secure Gateway"}
+                        {result.paymentMethod || "Chapa Gateway"}
                       </span>
                     </div>
                   </div>
@@ -596,9 +509,18 @@ function ThankYouPage() {
                     </button>
                   </div>
 
-                  {/* Micro Footer Notice */}
-                  <div className="mt-5 text-center text-[10px] text-muted-foreground font-mono">
-                    *** {t("OFFICIAL DONATION RECORD • KEEP FOR YOUR TAX RECORDS", "ህጋዊ የድጋፍ ሰነድ • ለግብር ቅነሳ መረጃዎ ይያዙት")} ***
+                  {/* Website URL at the bottom */}
+                  <div className="mt-6 pt-4 border-t border-dashed border-border/80 flex items-center justify-between text-xs text-muted-foreground font-mono">
+                    <a
+                      href="https://ethmwa.org"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="font-bold text-primary hover:underline flex items-center gap-1"
+                    >
+                      <span>https://ethmwa.org</span>
+                      <ExternalLink className="size-3" />
+                    </a>
+                    <span>finance@ethmwa.org</span>
                   </div>
                 </div>
               </div>
