@@ -13,6 +13,7 @@ import {
   MessageSquare,
   Printer,
   Radio,
+  RotateCcw,
   Send,
   Share2,
   Shield,
@@ -56,7 +57,23 @@ function ThankYouPage() {
   const [isDownloading, setIsDownloading] = useState(false);
   const [copiedShare, setCopiedShare] = useState(false);
   const [copiedTxRef, setCopiedTxRef] = useState(false);
+  const [printKey, setPrintKey] = useState(1);
+  const [isPrinting, setIsPrinting] = useState(true);
 
+  // Trigger sound / visual timer for the printing simulation
+  useEffect(() => {
+    setIsPrinting(true);
+    const timer = setTimeout(() => {
+      setIsPrinting(false);
+    }, 2000);
+    return () => clearTimeout(timer);
+  }, [printKey]);
+
+  const handleReplayPrint = () => {
+    setPrintKey((prev) => prev + 1);
+  };
+
+  // Extract reference ID from URL or Session Storage
   const [result, setResult] = useState<VerifyDonationResult>(() => {
     const urlRef =
       typeof window !== "undefined"
@@ -319,28 +336,52 @@ function ThankYouPage() {
     <PageShell>
       {/* Custom Keyframe Styles for the Receipt Printer Machine */}
       <style>{`
-        @keyframes printRollDown {
+        @keyframes thermalPrintFeed {
           0% {
-            transform: translateY(-80px) scale(0.96);
-            opacity: 0.2;
-            clip-path: inset(0 0 100% 0);
+            transform: translateY(-85%);
+            clip-path: inset(0 0 88% 0);
+            opacity: 0.3;
           }
-          40% {
+          25% {
+            transform: translateY(-65%);
+            clip-path: inset(0 0 65% 0);
+            opacity: 0.8;
+          }
+          50% {
+            transform: translateY(-40%);
+            clip-path: inset(0 0 40% 0);
+            opacity: 0.95;
+          }
+          75% {
+            transform: translateY(-15%);
+            clip-path: inset(0 0 15% 0);
             opacity: 1;
           }
           100% {
-            transform: translateY(0) scale(1);
-            opacity: 1;
+            transform: translateY(0);
             clip-path: inset(0 0 0 0);
+            opacity: 1;
           }
         }
-        .animate-print-receipt {
-          animation: printRollDown 1.1s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        .animate-thermal-print {
+          animation: thermalPrintFeed 1.6s cubic-bezier(0.25, 1, 0.5, 1) forwards;
         }
-        .receipt-serrated-bottom {
-          background-image: radial-gradient(circle at 10px -5px, transparent 10px, currentColor 11px);
-          background-size: 20px 15px;
-          background-repeat: repeat-x;
+        @keyframes stampPopIn {
+          0%, 60% {
+            transform: scale(2.5) rotate(-30deg);
+            opacity: 0;
+          }
+          85% {
+            transform: scale(0.9) rotate(-10deg);
+            opacity: 0.9;
+          }
+          100% {
+            transform: scale(1) rotate(-12deg);
+            opacity: 1;
+          }
+        }
+        .animate-stamp-verified {
+          animation: stampPopIn 2s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
         }
         @media print {
           body * {
@@ -392,30 +433,47 @@ function ThankYouPage() {
             {/* Left Column: The Receipt Printing Machine (7 Cols) */}
             <div className="lg:col-span-7">
               {/* POS Machine Dispenser Top Bar */}
-              <div className="relative z-20 mx-auto w-[92%] rounded-t-2xl bg-neutral-900 dark:bg-neutral-950 px-5 py-3 shadow-xl border-t border-x border-neutral-700">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <span className="size-2 rounded-full bg-emerald-400 animate-ping" />
-                    <span className="size-2 rounded-full bg-emerald-500" />
-                    <span className="text-[11px] font-mono font-semibold uppercase tracking-wider text-neutral-300">
-                      EMWA OFFICIAL RECEIPT PRINTER
+              <div className="relative z-30 mx-auto w-[94%] rounded-t-2xl bg-neutral-900 dark:bg-neutral-950 px-5 py-3.5 shadow-2xl border-t border-x border-neutral-700">
+                <div className="flex items-center justify-between gap-2">
+                  <div className="flex items-center gap-2.5">
+                    {isPrinting ? (
+                      <span className="size-2.5 rounded-full bg-amber-400 animate-ping" />
+                    ) : (
+                      <span className="size-2.5 rounded-full bg-emerald-500 shadow-[0_0_8px_#10b981]" />
+                    )}
+                    <span className="text-[11px] font-mono font-semibold uppercase tracking-wider text-neutral-200">
+                      {isPrinting
+                        ? t("PRINTING RECEIPT...", "ደረሰኝ በማተም ላይ...")
+                        : t("EMWA RECEIPT DISPENSED", "የተረጋገጠ ደረሰኝ")}
                     </span>
                   </div>
-                  <Printer className="size-4 text-neutral-400" />
+
+                  <button
+                    type="button"
+                    onClick={handleReplayPrint}
+                    className="inline-flex items-center gap-1.5 text-[10px] font-mono uppercase bg-neutral-800 hover:bg-neutral-700 text-neutral-300 px-2.5 py-1 rounded-md border border-neutral-600 transition-colors cursor-pointer"
+                    title={t("Replay Print Animation", "እንደገና አትም")}
+                  >
+                    <RotateCcw className="size-3" />
+                    <span>{t("Re-print", "እንደገና")}</span>
+                  </button>
                 </div>
                 {/* Physical Slit opening */}
-                <div className="mt-2 h-1 w-full rounded-full bg-black/90 shadow-inner" />
+                <div className="mt-2.5 h-1.5 w-full rounded-full bg-black shadow-[inset_0_2px_4px_rgba(0,0,0,0.9)]" />
               </div>
 
               {/* The Animated Receipt Paper rolling out from the slot */}
-              <div className="relative z-10 -mt-0.5 animate-print-receipt origin-top">
+              <div
+                key={printKey}
+                className="relative z-10 -mt-1 animate-thermal-print origin-top overflow-hidden"
+              >
                 <div
                   id="printable-receipt-card"
-                  className="rounded-b-3xl border-x-2 border-b-2 border-border/90 bg-card p-6 sm:p-9 shadow-[0_25px_60px_rgba(0,0,0,0.14)] relative overflow-hidden"
+                  className="rounded-b-3xl border-x-2 border-b-2 border-border/90 bg-card p-6 sm:p-9 shadow-[0_25px_60px_rgba(0,0,0,0.16)] relative overflow-hidden"
                 >
-                  {/* Subtle Background Watermark Stamp */}
-                  <div className="absolute right-4 top-1/3 -rotate-12 border-4 border-emerald-500/20 text-emerald-600/20 rounded-2xl px-6 py-2 pointer-events-none select-none">
-                    <span className="font-display font-extrabold text-3xl tracking-widest uppercase">
+                  {/* Subtle Background Watermark Stamp with pop-in animation */}
+                  <div className="absolute right-4 top-1/3 border-4 border-emerald-500/30 text-emerald-600 dark:text-emerald-400/30 rounded-2xl px-5 py-2 pointer-events-none select-none animate-stamp-verified">
+                    <span className="font-display font-extrabold text-2xl sm:text-3xl tracking-widest uppercase">
                       VERIFIED & PAID
                     </span>
                   </div>
