@@ -8,8 +8,12 @@ import {
   CheckCircle2,
   Copy,
   Download,
+  ExternalLink,
   Heart,
+  MessageSquare,
+  Printer,
   Radio,
+  Send,
   Share2,
   Shield,
   ShieldCheck,
@@ -53,7 +57,6 @@ function ThankYouPage() {
   const [copiedShare, setCopiedShare] = useState(false);
   const [copiedTxRef, setCopiedTxRef] = useState(false);
 
-  // Extract reference ID from URL or Session Storage
   const [result, setResult] = useState<VerifyDonationResult>(() => {
     const urlRef =
       typeof window !== "undefined"
@@ -160,13 +163,14 @@ function ThankYouPage() {
     };
   }, [search?.tx_ref, search?.anon]);
 
-  const handleShare = () => {
-    const text =
-      language === "am"
-        ? "የኢትዮጵያ ሚዲያ ሴቶች ማህበርን (EMWA) የሴት ጋዜጠኞች ደህንነት እና ሙያዊ ድጋፍ ፈንድን ደግፌያለሁ! እርስዎም ይደግፉ: https://ethmwa.org/donate"
-        : "I just supported the Ethiopian Media Women Association (EMWA) to empower female journalists and defend press freedom! Join me: https://ethmwa.org/donate";
+  const shareText =
+    language === "am"
+      ? "የኢትዮጵያ ሚዲያ ሴቶች ማህበርን (EMWA) የሴት ጋዜጠኞች ደህንነት እና ሙያዊ ድጋፍ ፈንድን ደግፌያለሁ! እርስዎም ይደግፉ:"
+      : "I just supported the Ethiopian Media Women Association (EMWA) to empower female journalists and defend press freedom! Join me:";
+  const shareUrl = "https://ethmwa.org/donate";
 
-    navigator.clipboard.writeText(text);
+  const handleShareClipboard = () => {
+    navigator.clipboard.writeText(`${shareText} ${shareUrl}`);
     setCopiedShare(true);
     toast.success(t("Share message copied to clipboard!", "የማጋሪያ መልዕክቱ ተቀድቷል!"));
     setTimeout(() => setCopiedShare(false), 3000);
@@ -298,235 +302,384 @@ function ThankYouPage() {
     }
   };
 
+  const handlePrint = () => {
+    if (typeof window !== "undefined") {
+      window.print();
+    }
+  };
+
+  const isAnon =
+    result.isAnonymous ||
+    !result.email ||
+    result.email.startsWith("anon.") ||
+    result.email.startsWith("anonymous.") ||
+    result.donorName === "Anonymous Supporter";
+
   return (
     <PageShell>
-      <section className="py-16 md:py-24 bg-gradient-to-b from-primary/5 via-background to-background min-h-[85vh] flex items-center">
-        <div className="site-container max-w-3xl">
-          <div className="space-y-8 animate-reveal">
-            {/* Thank You Main Card */}
-            <div className="relative rounded-3xl border-2 border-primary/20 bg-card p-8 sm:p-12 shadow-[0_24px_60px_rgba(0,0,0,0.12)] overflow-hidden">
-              {/* Decorative Background Accents */}
-              <div className="absolute -top-24 -right-24 size-64 rounded-full bg-primary/10 blur-3xl pointer-events-none" />
-              <div className="absolute -bottom-24 -left-24 size-64 rounded-full bg-emerald-500/10 blur-3xl pointer-events-none" />
+      {/* Custom Keyframe Styles for the Receipt Printer Machine */}
+      <style>{`
+        @keyframes printRollDown {
+          0% {
+            transform: translateY(-80px) scale(0.96);
+            opacity: 0.2;
+            clip-path: inset(0 0 100% 0);
+          }
+          40% {
+            opacity: 1;
+          }
+          100% {
+            transform: translateY(0) scale(1);
+            opacity: 1;
+            clip-path: inset(0 0 0 0);
+          }
+        }
+        .animate-print-receipt {
+          animation: printRollDown 1.1s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        }
+        .receipt-serrated-bottom {
+          background-image: radial-gradient(circle at 10px -5px, transparent 10px, currentColor 11px);
+          background-size: 20px 15px;
+          background-repeat: repeat-x;
+        }
+        @media print {
+          body * {
+            visibility: hidden;
+          }
+          #printable-receipt-card, #printable-receipt-card * {
+            visibility: visible;
+          }
+          #printable-receipt-card {
+            position: absolute;
+            left: 0;
+            top: 0;
+            width: 100%;
+          }
+        }
+      `}</style>
 
-              {/* Top Header Badge */}
-              <div className="text-center space-y-4 relative z-10">
-                <div className="relative inline-block">
-                  <div className="size-20 rounded-full bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 flex items-center justify-center mx-auto ring-8 ring-emerald-500/10">
-                    <CheckCircle2 className="size-11" />
+      <section className="py-12 md:py-20 bg-gradient-to-b from-primary/5 via-background to-background min-h-[90vh]">
+        <div className="site-container max-w-5xl">
+          {/* Top Success Banner */}
+          <div className="text-center max-w-2xl mx-auto mb-10 space-y-3">
+            <div className="inline-flex items-center gap-2 rounded-full border border-emerald-500/30 bg-emerald-500/10 px-3.5 py-1 text-xs font-bold text-emerald-600 dark:text-emerald-400 label-mono uppercase">
+              <CheckCircle2 className="size-4" />
+              <span>{t("Payment Successfully Verified", "ክፍያው በተሳካ ሁኔታ ተረጋግጧል")}</span>
+            </div>
+
+            <h1 className="font-display text-3xl sm:text-4xl md:text-5xl font-bold text-foreground tracking-tight">
+              {language === "am" ? (
+                <>
+                  ለድጋፍዎ <span className="italic text-primary">ከልብ እናመሰግናለን!</span>
+                </>
+              ) : (
+                <>
+                  Thank You for Your <span className="italic text-primary">Generous Gift!</span>
+                </>
+              )}
+            </h1>
+
+            <p className="text-sm sm:text-base text-muted-foreground leading-relaxed">
+              {t(
+                "Your contribution empowers women journalists with legal aid, safety resources, and investigative reporting grants across Ethiopia.",
+                "ያደረጉት አስተዋጽዖ ለሴት ጋዜጠኞች ደህንነት፣ ለህግ ጥበቃ እና ለምርመራ ጋዜጠኝነት ስኮላርሺፕ በቀጥታ ይውላል።",
+              )}
+            </p>
+          </div>
+
+          {/* Main 2-Column Grid: Animated Receipt Dispenser + Impact & Actions */}
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+            {/* Left Column: The Receipt Printing Machine (7 Cols) */}
+            <div className="lg:col-span-7">
+              {/* POS Machine Dispenser Top Bar */}
+              <div className="relative z-20 mx-auto w-[92%] rounded-t-2xl bg-neutral-900 dark:bg-neutral-950 px-5 py-3 shadow-xl border-t border-x border-neutral-700">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <span className="size-2 rounded-full bg-emerald-400 animate-ping" />
+                    <span className="size-2 rounded-full bg-emerald-500" />
+                    <span className="text-[11px] font-mono font-semibold uppercase tracking-wider text-neutral-300">
+                      EMWA OFFICIAL RECEIPT PRINTER
+                    </span>
                   </div>
-                  <div className="absolute -bottom-1 -right-1 size-7 rounded-full bg-primary text-primary-foreground flex items-center justify-center ring-2 ring-background">
-                    <Heart className="size-3.5 fill-current" />
+                  <Printer className="size-4 text-neutral-400" />
+                </div>
+                {/* Physical Slit opening */}
+                <div className="mt-2 h-1 w-full rounded-full bg-black/90 shadow-inner" />
+              </div>
+
+              {/* The Animated Receipt Paper rolling out from the slot */}
+              <div className="relative z-10 -mt-0.5 animate-print-receipt origin-top">
+                <div
+                  id="printable-receipt-card"
+                  className="rounded-b-3xl border-x-2 border-b-2 border-border/90 bg-card p-6 sm:p-9 shadow-[0_25px_60px_rgba(0,0,0,0.14)] relative overflow-hidden"
+                >
+                  {/* Subtle Background Watermark Stamp */}
+                  <div className="absolute right-4 top-1/3 -rotate-12 border-4 border-emerald-500/20 text-emerald-600/20 rounded-2xl px-6 py-2 pointer-events-none select-none">
+                    <span className="font-display font-extrabold text-3xl tracking-widest uppercase">
+                      VERIFIED & PAID
+                    </span>
+                  </div>
+
+                  {/* Receipt Header */}
+                  <div className="flex items-start justify-between border-b-2 border-dashed border-border/80 pb-5">
+                    <div>
+                      <div className="flex items-center gap-2">
+                        <div className="size-7 rounded-lg bg-primary/10 text-primary flex items-center justify-center font-bold font-display text-sm">
+                          E
+                        </div>
+                        <span className="font-display font-bold text-base text-foreground tracking-tight">
+                          ETHIOPIAN MEDIA WOMEN ASSOCIATION
+                        </span>
+                      </div>
+                      <p className="text-[11px] text-muted-foreground mt-1 label-mono">
+                        {t("ACSO Registered CSO No. 0000 • Addis Ababa, Ethiopia", "በሲቪል ማህበረሰብ ድርጅቶች ባለስልጣን የተመዘገበ CSO")}
+                      </p>
+                    </div>
+
+                    <div className="text-right shrink-0">
+                      <span className="inline-flex items-center gap-1 text-[11px] font-bold text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 px-2.5 py-1 rounded-md label-mono uppercase">
+                        <Check className="size-3" />
+                        {t("Paid", "ተከፍሏል")}
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* Main Amount Callout */}
+                  <div className="py-6 border-b border-dashed border-border/80 flex items-center justify-between">
+                    <div>
+                      <span className="text-xs uppercase label-mono text-muted-foreground font-semibold block mb-0.5">
+                        {t("Amount Contributed", "የተበረከተው ድጋፍ መጠን")}
+                      </span>
+                      <div className="font-display text-3xl sm:text-4xl font-extrabold text-primary">
+                        {result.amount ? `${result.amount.toLocaleString()} ${result.currency || "ETB"}` : "Confirmed"}
+                      </div>
+                    </div>
+                    <div className="text-right">
+                      <span className="text-xs uppercase label-mono text-muted-foreground font-semibold block mb-0.5">
+                        {t("Payment Method", "የክፍያ መንገድ")}
+                      </span>
+                      <span className="text-sm font-semibold uppercase text-foreground font-mono">
+                        {result.paymentMethod || "Chapa Secure Gateway"}
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* Key Receipt Fields Table */}
+                  <div className="py-5 border-b-2 border-dashed border-border/80 space-y-3 text-xs sm:text-sm font-mono">
+                    <div className="flex items-center justify-between">
+                      <span className="text-muted-foreground label-mono uppercase">{t("Transaction Ref", "የግብይት መለያ")}</span>
+                      <div className="flex items-center gap-1.5 font-bold text-foreground">
+                        <span className="truncate max-w-[180px] sm:max-w-[240px]">{result.txRef}</span>
+                        <button
+                          type="button"
+                          onClick={() => handleCopyTxRef(result.txRef || "")}
+                          className="p-1 rounded hover:bg-muted text-muted-foreground hover:text-foreground cursor-pointer transition-colors"
+                          title={t("Copy ID", "ቁጥሩን ቅዳ")}
+                        >
+                          {copiedTxRef ? <Check className="size-3 text-emerald-500" /> : <Copy className="size-3" />}
+                        </button>
+                      </div>
+                    </div>
+
+                    <div className="flex items-center justify-between">
+                      <span className="text-muted-foreground label-mono uppercase">{t("Date & Time", "ቀን እና ሰዓት")}</span>
+                      <span className="text-foreground font-medium">
+                        {result.date ? new Date(result.date).toLocaleString() : new Date().toLocaleString()}
+                      </span>
+                    </div>
+
+                    <div className="flex items-center justify-between">
+                      <span className="text-muted-foreground label-mono uppercase">{t("Donor", "ደጋፊ")}</span>
+                      <span className="text-foreground font-bold">
+                        {isAnon
+                          ? t("Anonymous Donor (Protected)", "ስም-አልባ ደጋፊ (የተጠበቀ)")
+                          : result.donorName || "Valued Supporter"}
+                      </span>
+                    </div>
+
+                    {!isAnon && result.email && (
+                      <div className="flex items-center justify-between">
+                        <span className="text-muted-foreground label-mono uppercase">{t("Receipt Sent To", "ኢሜይል")}</span>
+                        <span className="text-foreground">{result.email}</span>
+                      </div>
+                    )}
+
+                    <div className="flex items-center justify-between">
+                      <span className="text-muted-foreground label-mono uppercase">{t("Purpose", "አላማ")}</span>
+                      <span className="text-foreground text-right">
+                        {t("Women in Media & Safety Fund", "የሴት ጋዜጠኞች ደህንነት ፈንድ")}
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* Actions Row */}
+                  <div className="mt-6 flex flex-col sm:flex-row gap-3">
+                    <button
+                      type="button"
+                      onClick={handleDownloadReceipt}
+                      disabled={isDownloading}
+                      className="flex-1 flex items-center justify-center gap-2 rounded-xl bg-primary px-5 py-3.5 text-xs sm:text-sm font-bold text-primary-foreground shadow-md hover:bg-primary/90 transition-all cursor-pointer disabled:opacity-50"
+                    >
+                      <Download className="size-4" />
+                      <span>
+                        {isDownloading
+                          ? t("Generating...", "በማዘጋጀት ላይ...")
+                          : t("Download PDF Receipt", "ደረሰኝ አውርድ (PDF)")}
+                      </span>
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={handlePrint}
+                      className="flex items-center justify-center gap-2 rounded-xl border border-border bg-background px-4 py-3.5 text-xs sm:text-sm font-semibold text-foreground hover:bg-muted transition-colors cursor-pointer"
+                    >
+                      <Printer className="size-4 text-muted-foreground" />
+                      <span>{t("Print", "አትም")}</span>
+                    </button>
+                  </div>
+
+                  {/* Micro Footer Notice */}
+                  <div className="mt-5 text-center text-[10px] text-muted-foreground font-mono">
+                    *** {t("OFFICIAL DONATION RECORD • KEEP FOR YOUR TAX RECORDS", "ህጋዊ የድጋፍ ሰነድ • ለግብር ቅነሳ መረጃዎ ይያዙት")} ***
                   </div>
                 </div>
+              </div>
+            </div>
 
-                <div className="inline-flex items-center gap-1.5 rounded-full border border-emerald-500/30 bg-emerald-500/10 px-3.5 py-1 text-xs font-bold text-emerald-600 dark:text-emerald-400 label-mono uppercase">
-                  <BadgeCheck className="size-4" />
-                  {t("Payment Successfully Verified", "ክፍያው በተሳካ ሁኔታ ተረጋግጧል")}
+            {/* Right Column: Impact Realized & Social Sharing (5 Cols) */}
+            <div className="lg:col-span-5 space-y-5">
+              {/* Dynamic Impact Card */}
+              <div className="rounded-3xl border border-border bg-card p-6 shadow-sm space-y-4">
+                <div className="flex items-center gap-2 text-primary font-display font-bold text-lg">
+                  <Sparkles className="size-5" />
+                  <span>{t("What Your Gift Accomplishes", "የእርስዎ ድጋፍ የሚያመጣው ተጨባጭ ለውጥ")}</span>
                 </div>
-
-                <h1 className="font-display text-3xl sm:text-5xl font-bold text-foreground tracking-tight">
-                  {language === "am" ? (
-                    <>
-                      ለድጋፍዎ <span className="italic text-primary">ከልብ እናመሰግናለን!</span>
-                    </>
-                  ) : (
-                    <>
-                      Thank You for Your <span className="italic text-primary">Generous Gift!</span>
-                    </>
-                  )}
-                </h1>
-
-                <p className="text-sm sm:text-base text-muted-foreground max-w-xl mx-auto leading-relaxed">
+                <p className="text-xs sm:text-sm text-muted-foreground leading-relaxed">
                   {t(
-                    "Your contribution directly fuels legal defense, emergency safety resources, investigative grants, and executive leadership residencies for female media professionals across Ethiopia.",
-                    "ያደረጉት አስተዋጽዖ ለሴት ጋዜጠኞች ደህንነት፣ ለህግ ጥበቃ፣ ለምርመራ ጋዜጠኝነት ስኮላርሺፕ እና ለአመራር ስልጠናዎች በቀጥታ ይውላል።",
+                    "Your generous donation directly funds emergency defense, hands-on newsroom fellowships, and regional safety kits for women journalists across Ethiopia.",
+                    "ያደረጉት አስተዋጽዖ ለሴት ጋዜጠኞች ደህንነት፣ ለምርመራ ጋዜጠኝነት ስኮላርሺፕ እና ለክልል ጋዜጠኞች ድጋፍ በቀጥታ ይውላል።",
                   )}
                 </p>
-              </div>
 
-              {/* Verified Summary Certificate Box */}
-              <div className="mt-8 rounded-2xl border-2 border-border/80 bg-muted/30 p-6 sm:p-8 space-y-5 relative z-10">
-                <div className="flex items-center justify-between border-b border-border/80 pb-4">
-                  <div>
-                    <span className="text-[11px] text-muted-foreground uppercase label-mono font-semibold block">
-                      {t("Total Gift Verified", "የተረጋገጠው የድጋፍ መጠን")}
-                    </span>
-                    <span className="font-display text-2xl sm:text-4xl font-bold text-primary">
-                      {result.amount ? `${result.amount.toLocaleString()} ${result.currency || "ETB"}` : "Confirmed"}
-                    </span>
+                <div className="space-y-2.5 pt-2 border-t border-border/80">
+                  <div className="flex items-start gap-2.5 text-xs text-foreground">
+                    <CheckCircle2 className="size-4 text-emerald-500 shrink-0 mt-0.5" />
+                    <span>{t("Direct emergency support for journalists under threat", "ለሴት ጋዜጠኞች የድንገተኛ ጊዜ ደህንነት ሽፋን")}</span>
                   </div>
-                  <div className="text-right">
-                    <span className="text-[11px] text-muted-foreground uppercase label-mono font-semibold block">
-                      {t("Status", "ሁኔታ")}
-                    </span>
-                    <span className="inline-flex items-center gap-1 text-xs font-bold text-emerald-600 dark:text-emerald-400">
-                      <Check className="size-3.5" />
-                      {t("Completed", "ተጠናቋል")}
-                    </span>
+                  <div className="flex items-start gap-2.5 text-xs text-foreground">
+                    <CheckCircle2 className="size-4 text-emerald-500 shrink-0 mt-0.5" />
+                    <span>{t("Digital security and investigative journalism masterclasses", "የምርመራ ጋዜጠኝነትና የዲጂታል ደህንነት ስልጠና")}</span>
+                  </div>
+                  <div className="flex items-start gap-2.5 text-xs text-foreground">
+                    <CheckCircle2 className="size-4 text-emerald-500 shrink-0 mt-0.5" />
+                    <span>{t("Community media mentorship across regional states", "በክልል ከተሞች ለሚገኙ ማህበረሰብ ሬዲዮዎች ድጋፍ")}</span>
                   </div>
                 </div>
+              </div>
 
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs sm:text-sm">
-                  <div>
-                    <span className="text-muted-foreground text-xs block mb-0.5 label-mono uppercase">
-                      {t("Transaction Reference ID", "የግብይት መለያ ቁጥር")}
-                    </span>
-                    <div className="flex items-center gap-2">
-                      <span className="font-mono font-bold text-foreground text-xs sm:text-sm truncate">
-                        {result.txRef}
-                      </span>
-                      <button
-                        type="button"
-                        onClick={() => handleCopyTxRef(result.txRef || "")}
-                        title={t("Copy ID", "ቁጥሩን ቅዳ")}
-                        className="p-1 rounded-md bg-background border border-border/80 hover:border-primary text-muted-foreground hover:text-primary transition-colors shrink-0"
-                      >
-                        {copiedTxRef ? <Check className="size-3.5 text-emerald-500" /> : <Copy className="size-3.5" />}
-                      </button>
-                    </div>
+              {/* 1-Click Share Hub */}
+              <div className="rounded-3xl border border-border bg-card p-6 shadow-sm space-y-4">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2 text-foreground font-display font-bold text-base">
+                    <Share2 className="size-4 text-primary" />
+                    <span>{t("Inspire Others to Support", "ሌሎች እንዲደግፉ ያጋሩ")}</span>
                   </div>
-
-                  <div>
-                    <span className="text-muted-foreground text-xs block mb-0.5 label-mono uppercase">
-                      {t("Date & Time", "ቀን እና ሰዓት")}
-                    </span>
-                    <span className="text-foreground font-medium">
-                      {result.date ? new Date(result.date).toLocaleString() : new Date().toLocaleString()}
-                    </span>
-                  </div>
-
-                  <div>
-                    <span className="text-muted-foreground text-xs block mb-0.5 label-mono uppercase">
-                      {t("Donor", "ደጋፊ")}
-                    </span>
-                    <span className="text-foreground font-semibold">
-                      {result.isAnonymous ? t("Anonymous Supporter", "ስም-አልባ ደጋፊ") : (result.donorName || t("Valued Supporter", "የከበረ ደጋፊ"))}
-                    </span>
-                  </div>
-
-                  {result.isAnonymous || !result.email || result.email.startsWith("anonymous.") ? (
-                    <div>
-                      <span className="text-muted-foreground text-xs block mb-0.5 label-mono uppercase">
-                        {t("Receipt Delivery", "የደረሰኝ አሰጣጥ")}
-                      </span>
-                      <span className="text-foreground font-semibold inline-flex items-center gap-1.5 text-emerald-600 dark:text-emerald-400 text-xs sm:text-sm">
-                        <Check className="size-3.5" />
-                        {t("Direct PDF Download (No Email Required)", "በቀጥታ የሚወርድ PDF (ኢሜይል አያስፈልግም)")}
-                      </span>
-                    </div>
-                  ) : (
-                    <div>
-                      <span className="text-muted-foreground text-xs block mb-0.5 label-mono uppercase">
-                        {t("Receipt Sent To", "ደረሰኝ የተላከበት")}
-                      </span>
-                      <span className="text-foreground font-medium">{result.email}</span>
-                    </div>
-                  )}
-
-                  {result.paymentMethod && (
-                    <div>
-                      <span className="text-muted-foreground text-xs block mb-0.5 label-mono uppercase">
-                        {t("Payment Channel", "የክፍያ መንገድ")}
-                      </span>
-                      <span className="text-foreground font-semibold uppercase">{result.paymentMethod}</span>
-                    </div>
-                  )}
+                  <span className="text-[10px] uppercase label-mono text-muted-foreground">{t("Spread Impact", "አጋራ")}</span>
                 </div>
-              </div>
 
-              {/* Action Buttons */}
-              <div className="mt-8 flex flex-col sm:flex-row gap-3.5 relative z-10">
-                <button
-                  type="button"
-                  onClick={handleDownloadReceipt}
-                  disabled={isDownloading}
-                  className="flex-1 flex items-center justify-center gap-2.5 rounded-2xl bg-primary px-6 py-4 text-sm font-bold text-primary-foreground shadow-lg shadow-primary/25 hover:bg-primary/90 hover:shadow-xl transition-all cursor-pointer disabled:opacity-50"
-                >
-                  <Download className="size-4.5" />
-                  <span>
-                    {isDownloading
-                      ? t("Generating Receipt...", "ደረሰኝ በማዘጋጀት ላይ...")
-                      : t("Download Official PDF Receipt", "ኦፊሴላዊ ደረሰኝ አውርድ (PDF)")}
-                  </span>
-                </button>
-
-                <button
-                  type="button"
-                  onClick={handleShare}
-                  className="flex items-center justify-center gap-2 rounded-2xl border-2 border-border bg-background px-6 py-4 text-sm font-bold text-foreground hover:border-primary/60 transition-colors cursor-pointer"
-                >
-                  {copiedShare ? <Check className="size-4 text-emerald-500" /> : <Share2 className="size-4" />}
-                  <span>{copiedShare ? t("Copied!", "ተቀድቷል!") : t("Share Support", "መልዕክት አጋራ")}</span>
-                </button>
-              </div>
-
-              {/* Trust Footer */}
-              <div className="mt-8 pt-6 border-t border-border/80 text-center text-xs text-muted-foreground flex flex-wrap items-center justify-center gap-2 relative z-10">
-                <ShieldCheck className="size-4 text-primary" />
-                <span>
+                <p className="text-xs text-muted-foreground">
                   {t(
-                    "Ethiopian Media Women Association (EMWA) • ACSO Registered Civil Society Organization",
-                    "የኢትዮጵያ ሚዲያ ሴቶች ማህበር (EMWA) • በህግ የተመዘገበ ህጋዊ መንግስታዊ ያልሆነ ማህበር",
+                    "Encourage your network to stand with female reporters and media diversity in Ethiopia.",
+                    "ጓደኞችዎ እና ማህበረሰብዎ ለሴት ጋዜጠኞች ድምፅ እንዲሆኑ ያበረታቱ።",
                   )}
-                </span>
+                </p>
+
+                <div className="grid grid-cols-3 gap-2">
+                  {/* Telegram */}
+                  <a
+                    href={`https://t.me/share/url?url=${encodeURIComponent(shareUrl)}&text=${encodeURIComponent(shareText)}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex flex-col items-center justify-center p-3 rounded-xl border border-border bg-background hover:border-primary/50 hover:bg-muted/30 transition-all text-xs font-semibold text-foreground group"
+                  >
+                    <Send className="size-4 text-[#229ED9] mb-1 group-hover:scale-110 transition-transform" />
+                    <span>Telegram</span>
+                  </a>
+
+                  {/* WhatsApp */}
+                  <a
+                    href={`https://api.whatsapp.com/send?text=${encodeURIComponent(`${shareText} ${shareUrl}`)}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex flex-col items-center justify-center p-3 rounded-xl border border-border bg-background hover:border-primary/50 hover:bg-muted/30 transition-all text-xs font-semibold text-foreground group"
+                  >
+                    <MessageSquare className="size-4 text-[#25D366] mb-1 group-hover:scale-110 transition-transform" />
+                    <span>WhatsApp</span>
+                  </a>
+
+                  {/* Copy Link */}
+                  <button
+                    type="button"
+                    onClick={handleShareClipboard}
+                    className="flex flex-col items-center justify-center p-3 rounded-xl border border-border bg-background hover:border-primary/50 hover:bg-muted/30 transition-all text-xs font-semibold text-foreground group cursor-pointer"
+                  >
+                    {copiedShare ? (
+                      <Check className="size-4 text-emerald-500 mb-1" />
+                    ) : (
+                      <Copy className="size-4 text-muted-foreground mb-1 group-hover:scale-110 transition-transform" />
+                    )}
+                    <span>{copiedShare ? t("Copied!", "ተቀድቷል!") : t("Copy Link", "ሊንኩን ቅዳ")}</span>
+                  </button>
+                </div>
               </div>
-            </div>
 
-            {/* Next Steps & Impact Pillars Cards */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <Link
-                to="/programs"
-                className="rounded-2xl border border-border bg-card p-6 hover:border-primary/50 transition-all group flex items-start gap-4"
-              >
-                <div className="size-11 rounded-xl bg-primary/10 text-primary flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform">
-                  <Sparkles className="size-5" />
-                </div>
-                <div>
-                  <h3 className="font-display text-base font-bold text-foreground group-hover:text-primary transition-colors flex items-center gap-1.5">
-                    <span>{t("See What You Supported", "የደገፉትን ስራዎች ይመልከቱ")}</span>
-                    <ArrowRight className="size-3.5 opacity-60 group-hover:translate-x-1 transition-transform" />
-                  </h3>
-                  <p className="text-xs text-muted-foreground mt-1 leading-relaxed">
-                    {t(
-                      "Explore our active fellowships, journalist safety networks, and newsroom incubators.",
-                      "የስልጠና፣ የስኮላርሺፕ እና የጋዜጠኞች ደህንነት ፕሮግራሞቻችንን ይጎብኙ።",
-                    )}
-                  </p>
-                </div>
-              </Link>
+              {/* Next Steps: Membership & Programs */}
+              <div className="grid grid-cols-2 gap-3">
+                <Link
+                  to="/programs"
+                  className="rounded-2xl border border-border bg-card p-4 hover:border-primary/50 transition-all group flex flex-col justify-between"
+                >
+                  <div className="size-8 rounded-lg bg-primary/10 text-primary flex items-center justify-center mb-3 group-hover:scale-110 transition-transform">
+                    <Radio className="size-4" />
+                  </div>
+                  <div>
+                    <span className="font-display text-xs font-bold text-foreground group-hover:text-primary transition-colors block">
+                      {t("Our Programs", "ፕሮግራሞቻችን")}
+                    </span>
+                    <span className="text-[10px] text-muted-foreground block mt-0.5">
+                      {t("Explore fellowships & hubs", "ስኮላርሺፖችን ይጎብኙ")}
+                    </span>
+                  </div>
+                </Link>
 
-              <Link
-                to="/membership"
-                className="rounded-2xl border border-border bg-card p-6 hover:border-primary/50 transition-all group flex items-start gap-4"
-              >
-                <div className="size-11 rounded-xl bg-primary/10 text-primary flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform">
-                  <Users className="size-5" />
-                </div>
-                <div>
-                  <h3 className="font-display text-base font-bold text-foreground group-hover:text-primary transition-colors flex items-center gap-1.5">
-                    <span>{t("Join EMWA Membership", "የማህበሩ አባል ይሁኑ")}</span>
-                    <ArrowRight className="size-3.5 opacity-60 group-hover:translate-x-1 transition-transform" />
-                  </h3>
-                  <p className="text-xs text-muted-foreground mt-1 leading-relaxed">
-                    {t(
-                      "Join 400+ verified women media professionals, journalists, and strategic allies.",
-                      "ከ400+ በላይ የሴት ጋዜጠኞች እና የሚዲያ ባለሙያዎች ማህበረሰብ ጋር ይቀላቀሉ።",
-                    )}
-                  </p>
-                </div>
-              </Link>
-            </div>
+                <Link
+                  to="/membership"
+                  className="rounded-2xl border border-border bg-card p-4 hover:border-primary/50 transition-all group flex flex-col justify-between"
+                >
+                  <div className="size-8 rounded-lg bg-primary/10 text-primary flex items-center justify-center mb-3 group-hover:scale-110 transition-transform">
+                    <Users className="size-4" />
+                  </div>
+                  <div>
+                    <span className="font-display text-xs font-bold text-foreground group-hover:text-primary transition-colors block">
+                      {t("Join Network", "አባል ይሁኑ")}
+                    </span>
+                    <span className="text-[10px] text-muted-foreground block mt-0.5">
+                      {t("400+ Media Professionals", "400+ የሚዲያ ባለሙያዎች")}
+                    </span>
+                  </div>
+                </Link>
+              </div>
 
-            {/* Back to Home Button */}
-            <div className="text-center pt-2">
-              <Link
-                to="/"
-                className="inline-flex items-center gap-2 text-xs font-bold label-mono uppercase text-muted-foreground hover:text-primary transition-colors"
-              >
-                <ArrowLeft className="size-4" />
-                <span>{t("Return to Homepage", "ወደ ዋናው ገጽ ተመለስ")}</span>
-              </Link>
+              {/* Home Link */}
+              <div className="pt-2 text-center">
+                <Link
+                  to="/"
+                  className="inline-flex items-center gap-1.5 text-xs font-bold label-mono uppercase text-muted-foreground hover:text-primary transition-colors"
+                >
+                  <ArrowLeft className="size-3.5" />
+                  <span>{t("Return to Homepage", "ወደ ዋናው ገጽ ተመለስ")}</span>
+                </Link>
+              </div>
             </div>
           </div>
         </div>
