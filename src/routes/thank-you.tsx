@@ -130,6 +130,7 @@ function ThankYouPage() {
             res.isAnonymous ||
             search?.anon === "1" ||
             (typeof window !== "undefined" && sessionStorage.getItem("emwa_last_is_anonymous") === "true") ||
+            res.email?.startsWith("anon.") ||
             res.email?.startsWith("anonymous.") ||
             res.donorName === "Anonymous Supporter";
 
@@ -182,6 +183,7 @@ function ThankYouPage() {
       const isAnon =
         result.isAnonymous ||
         !result.email ||
+        result.email.startsWith("anon.") ||
         result.email.startsWith("anonymous.") ||
         result.donorName === "Anonymous Supporter";
 

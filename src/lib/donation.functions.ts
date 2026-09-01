@@ -96,15 +96,22 @@ export const initializeDonation = createServerFn({ method: "POST" })
       if (!firstName) firstName = "Anonymous";
       if (!lastName) lastName = "Supporter";
       if (!email) {
-        // Generate anonymous placeholder email for Chapa gateway compliance
-        const uniqueId = txRef.toLowerCase().replace(/[^a-z0-9]/g, "");
-        email = `anonymous.${uniqueId}@ethmwa.org`;
+        // Generate compact anonymous placeholder email (under 50 chars for Chapa)
+        const shortStamp = Date.now().toString().slice(-6);
+        const shortRand = Math.random().toString(36).substring(2, 7);
+        email = `anon.${shortStamp}.${shortRand}@ethmwa.org`;
       }
     } else {
       if (!email || !firstName || !lastName) {
         return {
           success: false,
           error: "Please provide your first name, last name, and a valid email address.",
+        };
+      }
+      if (email.length > 50) {
+        return {
+          success: false,
+          error: "Email address must not exceed 50 characters.",
         };
       }
     }
@@ -140,7 +147,7 @@ export const initializeDonation = createServerFn({ method: "POST" })
           tx_ref: txRef,
           return_url: returnUrl,
           customization: {
-            title: isAnonymous ? "EMWA Anonymous Donation" : "EMWA Donation",
+            title: isAnonymous ? "EMWA Anonymous" : "EMWA Donation", // strictly <= 16 characters
             description: "Supporting Women in Ethiopian Media",
           },
           meta: {
@@ -230,7 +237,7 @@ export const verifyDonation = createServerFn({ method: "POST" })
 
       const isAnon =
         txData.meta?.is_anonymous === "true" ||
-        (txData.email && txData.email.startsWith("anonymous.")) ||
+        (txData.email && (txData.email.startsWith("anon.") || txData.email.startsWith("anonymous."))) ||
         (txData.first_name === "Anonymous" && txData.last_name === "Supporter");
 
       return {
