@@ -15,7 +15,6 @@ import {
   Radio,
   Send,
   Share2,
-  Shield,
   ShieldCheck,
   Sparkles,
   Users,
@@ -24,6 +23,7 @@ import { PageShell } from "@/components/page-shell";
 import { useLanguage } from "@/lib/language-context";
 import { verifyDonation, type VerifyDonationResult } from "@/lib/donation.functions";
 import { toast } from "sonner";
+import logo from "@/assets/emwa-logo-new.png";
 
 export const Route = createFileRoute("/thank-you")({
   validateSearch: (search: Record<string, unknown>) => {
@@ -41,13 +41,43 @@ export const Route = createFileRoute("/thank-you")({
   },
   head: () => ({
     meta: [
-      { title: "Thank You for Your Donation — EMWA" },
+      { title: "Donation Receipt — Ethiopian Media Women Association" },
       { name: "description", content: "Thank you for supporting the Ethiopian Media Women Association." },
-      { property: "og:title", content: "Thank You for Your Support — EMWA" },
+      { property: "og:title", content: "Donation Receipt — EMWA" },
     ],
   }),
   component: ThankYouPage,
 });
+
+function numberToWords(num: number): string {
+  if (!num || isNaN(num)) return "Zero";
+  const a = [
+    "", "One", "Two", "Three", "Four", "Five", "Six", "Seven", "Eight", "Nine", "Ten",
+    "Eleven", "Twelve", "Thirteen", "Fourteen", "Fifteen", "Sixteen", "Seventeen", "Eighteen", "Nineteen",
+  ];
+  const b = ["", "", "Twenty", "Thirty", "Forty", "Fifty", "Sixty", "Seventy", "Eighty", "Ninety"];
+  const g = ["", "Thousand", "Million", "Billion"];
+
+  function helper(n: number): string {
+    if (n === 0) return "";
+    if (n < 20) return a[n] + " ";
+    if (n < 100) return b[Math.floor(n / 10)] + " " + (n % 10 !== 0 ? a[n % 10] + " " : "");
+    return a[Math.floor(n / 100)] + " Hundred " + helper(n % 100);
+  }
+
+  let str = "";
+  let i = 0;
+  let temp = Math.floor(num);
+  while (temp > 0) {
+    const chunk = temp % 1000;
+    if (chunk > 0) {
+      str = helper(chunk) + g[i] + " " + str;
+    }
+    temp = Math.floor(temp / 1000);
+    i++;
+  }
+  return (str.trim() || "Zero") + " Ethiopian Birr Only";
+}
 
 function ThankYouPage() {
   const search = Route.useSearch();
@@ -69,7 +99,7 @@ function ThankYouPage() {
       urlRef ||
       search?.tx_ref ||
       (typeof window !== "undefined" ? sessionStorage.getItem("emwa_last_tx_ref") : "") ||
-      `EMWA-DONATION-${Date.now().toString().slice(-6)}`;
+      `EMWA-${Date.now().toString().slice(-6)}`;
 
     const isAnonymousFromStorage =
       typeof window !== "undefined" && sessionStorage.getItem("emwa_last_is_anonymous") === "true";
@@ -107,7 +137,7 @@ function ThankYouPage() {
   const handleCopyTxRef = (id: string) => {
     navigator.clipboard.writeText(id);
     setCopiedTxRef(true);
-    toast.success(t("Transaction Reference copied!", "የግብይት ቁጥር ተቀድቷል!"));
+    toast.success(t("Transaction Reference copied!", "የደረሰኝ ቁጥር ተቀድቷል!"));
     setTimeout(() => setCopiedTxRef(false), 3000);
   };
 
@@ -183,7 +213,7 @@ function ThankYouPage() {
 
     try {
       const { jsPDF } = await import("jspdf");
-      const doc = new jsPDF({ unit: "mm", format: "a4" });
+      const doc = new jsPDF({ orientation: "landscape", unit: "mm", format: "a5" });
 
       const isAnon =
         result.isAnonymous ||
@@ -195,105 +225,92 @@ function ThankYouPage() {
       const amountStr = result.amount ? `${result.amount.toLocaleString()} ${result.currency || "ETB"}` : "N/A";
       const dateStr = result.date ? new Date(result.date).toLocaleDateString() : new Date().toLocaleDateString();
 
-      // Header Banner
-      doc.setFillColor(140, 45, 60); // EMWA Burgundy
-      doc.rect(0, 0, 210, 38, "F");
+      // Top Red Wave Banner
+      doc.setFillColor(140, 45, 60); // EMWA Burgundy/Red
+      doc.rect(0, 0, 210, 22, "F");
 
       doc.setTextColor(255, 255, 255);
       doc.setFont("helvetica", "bold");
-      doc.setFontSize(18);
-      doc.text("ETHIOPIAN MEDIA WOMEN ASSOCIATION (EMWA)", 20, 18);
-      doc.setFontSize(10);
+      doc.setFontSize(14);
+      doc.text("ETHIOPIAN MEDIA WOMEN ASSOCIATION", 14, 12);
+      doc.setFontSize(8);
       doc.setFont("helvetica", "normal");
-      doc.text("OFFICIAL DONATION RECEIPT & ACKNOWLEDGEMENT", 20, 26);
-      doc.text("Authority for Civil Society Organizations (ACSO) Registered CSO", 20, 32);
+      doc.text("OFFICIAL DONATION RECEIPT VOUCHER", 14, 18);
+
+      // Receipt Badge in Header
+      doc.setFillColor(255, 255, 255);
+      doc.rect(160, 6, 35, 10, "F");
+      doc.setTextColor(140, 45, 60);
+      doc.setFont("helvetica", "bold");
+      doc.setFontSize(10);
+      doc.text("RECEIPT", 168, 13);
 
       // Body Section
       doc.setTextColor(30, 30, 30);
-      doc.setFontSize(14);
+      doc.setFontSize(9);
       doc.setFont("helvetica", "bold");
-      doc.text("DONATION CONFIRMATION DETAILS", 20, 52);
+      doc.text(`No: ${result.txRef || "N/A"}`, 14, 34);
+      doc.text(`Date: ${dateStr}`, 150, 34);
 
-      doc.setFontSize(10);
+      // Fill lines
+      let y = 46;
       doc.setFont("helvetica", "normal");
+      doc.text("Received from:", 14, y);
+      doc.setFont("helvetica", "bold");
+      doc.text(isAnon ? "Anonymous Supporter (Protected)" : (result.donorName || "Valued Supporter"), 42, y);
+      doc.setDrawColor(200, 200, 200);
+      doc.line(40, y + 2, 195, y + 2);
+
+      y += 12;
+      doc.setFont("helvetica", "normal");
+      doc.text("The sum of:", 14, y);
+      doc.setFont("helvetica", "bold");
+      doc.text(numberToWords(result.amount || 0), 42, y);
+      doc.line(40, y + 2, 195, y + 2);
+
+      y += 12;
+      doc.setFont("helvetica", "normal");
+      doc.text("For / Purpose:", 14, y);
+      doc.setFont("helvetica", "bold");
+      doc.text("Empowering Women in Ethiopian Media & Journalist Safety Fund", 42, y);
+      doc.line(40, y + 2, 195, y + 2);
+
+      // Amount Box on the right
+      y += 12;
+      doc.setFillColor(245, 245, 245);
+      doc.roundedRect(145, y - 4, 50, 16, 2, 2, "F");
+      doc.setDrawColor(140, 45, 60);
+      doc.setLineWidth(0.5);
+      doc.roundedRect(145, y - 4, 50, 16, 2, 2, "D");
+
+      doc.setFontSize(8);
       doc.setTextColor(100, 100, 100);
-      doc.text(`Receipt Reference: ${result.txRef || "N/A"}`, 20, 60);
-      doc.text(`Date Issued: ${dateStr}`, 20, 66);
-      doc.text(`Payment Status: COMPLETED & VERIFIED`, 20, 72);
-
-      // Line separator
-      doc.setDrawColor(210, 210, 210);
-      doc.line(20, 78, 190, 78);
-
-      // Table Details
-      doc.setFontSize(11);
-      doc.setTextColor(30, 30, 30);
-
-      let currentY = 90;
-
-      doc.setFont("helvetica", "bold");
-      doc.text("Donor Name:", 20, currentY);
-      doc.setFont("helvetica", "normal");
-      doc.text(isAnon ? "Anonymous Donor (Protected)" : (result.donorName || "Valued Supporter"), 70, currentY);
-
-      if (!isAnon && result.email) {
-        currentY += 10;
-        doc.setFont("helvetica", "bold");
-        doc.text("Email Address:", 20, currentY);
-        doc.setFont("helvetica", "normal");
-        doc.text(result.email, 70, currentY);
-      }
-
-      currentY += 10;
-      doc.setFont("helvetica", "bold");
-      doc.text("Contribution Amount:", 20, currentY);
+      doc.text("Amount:", 148, y + 2);
+      doc.setFontSize(12);
       doc.setFont("helvetica", "bold");
       doc.setTextColor(140, 45, 60);
-      doc.text(amountStr, 70, currentY);
+      doc.text(amountStr, 148, y + 9);
 
-      currentY += 10;
-      doc.setFont("helvetica", "bold");
-      doc.setTextColor(30, 30, 30);
-      doc.text("Purpose / Cause:", 20, currentY);
-      doc.setFont("helvetica", "normal");
-      doc.text("Empowering Women in Ethiopian Media & Journalist Safety Fund", 70, currentY);
-
-      // Line separator
-      currentY += 10;
-      doc.line(20, currentY, 190, currentY);
-
-      // Appreciation Note
-      currentY += 12;
-      doc.setFontSize(10);
-      doc.setTextColor(60, 60, 60);
-      doc.text(
-        "On behalf of all women journalists, media professionals, and fellows across Ethiopia,",
-        20,
-        currentY,
-      );
-      currentY += 6;
-      doc.text(
-        "we extend our heartfelt gratitude for your generous support and commitment to gender equality in journalism.",
-        20,
-        currentY,
-      );
-
-      // Legal CSO Notice
+      // Signature line on the left
       doc.setFontSize(9);
-      doc.setTextColor(120, 120, 120);
-      doc.text(
-        "The Ethiopian Media Women Association (EMWA) is a legally registered Civil Society Organization",
-        20,
-        165,
-      );
-      doc.text(
-        "under the Authority for Civil Society Organizations (ACSO) of the Federal Democratic Republic of Ethiopia.",
-        20,
-        171,
-      );
-      doc.text("Official Website: https://ethmwa.org • Email: finance@ethmwa.org", 20, 177);
+      doc.setTextColor(60, 60, 60);
+      doc.setFont("helvetica", "normal");
+      doc.text("Authorized Signature:", 14, y + 6);
+      doc.line(48, y + 8, 130, y + 8);
+      doc.setFont("helvetica", "italic");
+      doc.setFontSize(8);
+      doc.setTextColor(16, 185, 129);
+      doc.text("EMWA Finance Office (Digitally Verified)", 52, y + 6);
 
-      doc.save(`EMWA-Donation-Receipt-${result.txRef || "Confirmation"}.pdf`);
+      // Bottom Red Stripe
+      doc.setFillColor(140, 45, 60);
+      doc.rect(0, 135, 210, 13, "F");
+      doc.setTextColor(255, 255, 255);
+      doc.setFont("helvetica", "normal");
+      doc.setFontSize(8);
+      doc.text("Official Website: https://ethmwa.org  •  Email: finance@ethmwa.org", 14, 143);
+
+      doc.save(`EMWA-Donation-Receipt-${result.txRef || "Receipt"}.pdf`);
       toast.success(t("Donation receipt downloaded successfully", "የድጋፍ ደረሰኝ በተሳካ ሁኔታ ወርዷል"));
     } catch (err) {
       console.error(err);
@@ -316,13 +333,18 @@ function ThankYouPage() {
     result.email.startsWith("anonymous.") ||
     result.donorName === "Anonymous Supporter";
 
+  const dateObj = result.date ? new Date(result.date) : new Date();
+  const dayStr = String(dateObj.getDate()).padStart(2, "0");
+  const monthStr = String(dateObj.getMonth() + 1).padStart(2, "0");
+  const yearStr = String(dateObj.getFullYear());
+
   return (
     <PageShell>
-      {/* Smooth Slide Down Keyframe */}
+      {/* Custom Styles for Checkbook / Voucher Book Slip */}
       <style>{`
-        @keyframes receiptSlideDown {
+        @keyframes voucherSlideIn {
           0% {
-            transform: translateY(-40px);
+            transform: translateY(-30px);
             opacity: 0;
           }
           100% {
@@ -330,17 +352,25 @@ function ThankYouPage() {
             opacity: 1;
           }
         }
-        .animate-receipt-in {
-          animation: receiptSlideDown 0.7s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        .animate-voucher-in {
+          animation: voucherSlideIn 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        }
+        .book-spiral-binding {
+          background: linear-gradient(90deg, #e5e7eb 0%, #ffffff 40%, #d1d5db 70%, #9ca3af 100%);
+          box-shadow: inset -3px 0 6px rgba(0, 0, 0, 0.15), 4px 0 10px rgba(0, 0, 0, 0.08);
+        }
+        .dark .book-spiral-binding {
+          background: linear-gradient(90deg, #374151 0%, #4b5563 40%, #1f2937 70%, #111827 100%);
+          box-shadow: inset -3px 0 6px rgba(0, 0, 0, 0.4), 4px 0 10px rgba(0, 0, 0, 0.2);
         }
         @media print {
           body * {
             visibility: hidden;
           }
-          #printable-receipt-card, #printable-receipt-card * {
+          #printable-voucher-card, #printable-voucher-card * {
             visibility: visible;
           }
-          #printable-receipt-card {
+          #printable-voucher-card {
             position: absolute;
             left: 0;
             top: 0;
@@ -353,188 +383,259 @@ function ThankYouPage() {
         <div className="site-container max-w-5xl">
           {/* Main 2-Column Grid */}
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
-            {/* Left Column: The Digital Receipt Card with Big Thank You Inside (7 Cols) */}
-            <div className="lg:col-span-7">
-              <div className="animate-receipt-in">
-                <div
-                  id="printable-receipt-card"
-                  className="rounded-3xl border-2 border-border/90 bg-card p-6 sm:p-9 shadow-[0_25px_60px_rgba(0,0,0,0.12)] relative overflow-hidden"
-                >
-                  {/* Subtle Background Watermark Stamp */}
-                  <div className="absolute right-4 top-1/2 -translate-y-1/2 -rotate-12 border-4 border-emerald-500/20 text-emerald-600/20 dark:text-emerald-400/20 rounded-2xl px-5 py-2 pointer-events-none select-none">
-                    <span className="font-display font-extrabold text-2xl sm:text-3xl tracking-widest uppercase">
-                      VERIFIED & PAID
-                    </span>
+            {/* Left Column: Voucher Booklet Style Receipt (8 Cols) */}
+            <div className="lg:col-span-8 animate-voucher-in">
+              {/* Booklet Container with Left Spine Binding */}
+              <div
+                id="printable-voucher-card"
+                className="relative flex rounded-2xl md:rounded-3xl border border-neutral-300 dark:border-neutral-700 bg-card shadow-[0_20px_50px_rgba(0,0,0,0.14)] overflow-hidden"
+              >
+                {/* Left Book Spine / Binding Roll */}
+                <div className="hidden sm:flex flex-col items-center justify-between w-10 md:w-12 book-spiral-binding shrink-0 py-6 border-r border-neutral-300 dark:border-neutral-700 relative z-20">
+                  <div className="space-y-4">
+                    {Array.from({ length: 8 }).map((_, i) => (
+                      <div
+                        key={i}
+                        className="size-2.5 rounded-full bg-neutral-400 dark:bg-neutral-800 shadow-inner border border-neutral-500/30"
+                      />
+                    ))}
+                  </div>
+                </div>
+
+                {/* Right Voucher Slip Main Paper */}
+                <div className="flex-1 flex flex-col justify-between bg-white text-neutral-900 relative overflow-hidden">
+                  {/* Top Red Ribbon Curved Wave Accent */}
+                  <div className="relative bg-[#8C2D3C] text-white pt-5 pb-7 px-5 sm:px-8">
+                    {/* SVG Smooth Wave at the Bottom */}
+                    <div className="absolute inset-x-0 bottom-0 overflow-hidden leading-none pointer-events-none">
+                      <svg
+                        viewBox="0 0 1200 120"
+                        preserveAspectRatio="none"
+                        className="relative block w-full h-4 sm:h-6 text-white fill-current"
+                      >
+                        <path d="M0,0 C150,60 400,60 600,30 C800,0 1050,40 1200,20 L1200,120 L0,120 Z" />
+                      </svg>
+                    </div>
+
+                    <div className="relative z-10 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                      {/* Logo + Company Name */}
+                      <div className="flex items-center gap-3">
+                        <img
+                          src={logo}
+                          alt="EMWA Logo"
+                          className="h-11 sm:h-13 w-auto object-contain bg-white rounded-lg p-1 shadow-sm shrink-0"
+                        />
+                        <div>
+                          <h2 className="font-display font-extrabold text-base sm:text-lg text-white tracking-tight leading-tight">
+                            Ethiopian Media Women Association
+                          </h2>
+                          <p className="text-[11px] text-rose-100 font-medium leading-tight mt-0.5">
+                            Empowering Women in Media • Defending Press Freedom
+                          </p>
+                          <p className="text-[10px] text-rose-200 font-mono mt-0.5">
+                            Addis Ababa, Ethiopia • info@ethmwa.org
+                          </p>
+                        </div>
+                      </div>
+
+                      {/* Red Box Badge: RECEIPT */}
+                      <div className="self-end sm:self-center bg-white text-[#8C2D3C] px-5 py-1.5 rounded-md shadow-md">
+                        <span className="font-display font-extrabold text-sm sm:text-base tracking-wider uppercase">
+                          RECEIPT
+                        </span>
+                      </div>
+                    </div>
                   </div>
 
-                  {/* Top Big Thank You Message INSIDE Receipt */}
-                  <div className="text-center pb-6 border-b-2 border-dashed border-border/80">
-                    <div className="inline-flex items-center justify-center size-14 rounded-2xl bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 mb-3.5 mx-auto ring-8 ring-emerald-500/10">
-                      <CheckCircle2 className="size-8" />
-                    </div>
-
-                    <div className="inline-flex items-center gap-1.5 rounded-full border border-emerald-500/30 bg-emerald-500/10 px-3 py-0.5 text-xs font-bold text-emerald-600 dark:text-emerald-400 label-mono uppercase mb-2">
-                      <BadgeCheck className="size-3.5" />
-                      <span>{t("Payment Successfully Verified", "ክፍያው በተሳካ ሁኔታ ተረጋግጧል")}</span>
-                    </div>
-
-                    <h1 className="font-display text-2xl sm:text-4xl font-extrabold text-foreground tracking-tight">
-                      {language === "am" ? (
-                        <>
-                          ለድጋፍዎ <span className="italic text-primary">ከልብ እናመሰግናለን!</span>
-                        </>
-                      ) : (
-                        <>
-                          Thank You for Your <span className="italic text-primary">Generous Support!</span>
-                        </>
-                      )}
+                  {/* Big Thank You Banner Inside Voucher */}
+                  <div className="px-5 sm:px-8 pt-4 pb-2 text-center border-b border-neutral-200/80 bg-rose-50/40">
+                    <h1 className="font-display text-xl sm:text-2xl font-extrabold text-[#8C2D3C] tracking-tight">
+                      {language === "am" ? "ለድጋፍዎ ከልብ እናመሰግናለን!" : "Thank You for Your Generous Support!"}
                     </h1>
-
-                    <p className="text-xs sm:text-sm text-muted-foreground mt-2 max-w-md mx-auto leading-relaxed">
+                    <p className="text-xs text-neutral-600 mt-0.5 max-w-lg mx-auto">
                       {t(
-                        "Your contribution directly fuels legal defense, emergency safety resources, and investigative reporting grants for female journalists across Ethiopia.",
-                        "ያደረጉት አስተዋጽዖ ለሴት ጋዜጠኞች ደህንነት፣ ለህግ ጥበቃ እና ለምርመራ ጋዜጠኝነት ስኮላርሺፕ በቀጥታ ይውላል።",
+                        "Your contribution directly fuels safety resources, legal defense, and grants for women journalists.",
+                        "ያደረጉት አስተዋጽዖ ለሴት ጋዜጠኞች ደህንነት እና ለምርመራ ጋዜጠኝነት ስኮላርሺፕ በቀጥታ ይውላል።",
                       )}
                     </p>
                   </div>
 
-                  {/* Receipt Association Title */}
-                  <div className="py-4 border-b border-dashed border-border/80 flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                      <div className="size-7 rounded-lg bg-primary/10 text-primary flex items-center justify-center font-bold font-display text-sm">
-                        E
+                  {/* Voucher Body (Ledger Fill-in Lines) */}
+                  <div className="p-5 sm:p-8 space-y-4">
+                    {/* Top Row: No. + Date Box */}
+                    <div className="flex items-center justify-between gap-4 pb-1">
+                      {/* No. */}
+                      <div className="flex items-center gap-2">
+                        <span className="font-display font-bold text-xs sm:text-sm text-neutral-700">No.</span>
+                        <div className="flex items-center gap-1.5 font-mono font-bold text-xs sm:text-sm text-neutral-900 bg-neutral-100 px-2 py-0.5 rounded border border-neutral-300">
+                          <span>{result.txRef}</span>
+                          <button
+                            type="button"
+                            onClick={() => handleCopyTxRef(result.txRef || "")}
+                            className="text-neutral-500 hover:text-neutral-900 cursor-pointer p-0.5"
+                            title="Copy Ref"
+                          >
+                            {copiedTxRef ? <Check className="size-3 text-emerald-600" /> : <Copy className="size-3" />}
+                          </button>
+                        </div>
                       </div>
-                      <span className="font-display font-bold text-sm sm:text-base text-foreground tracking-tight">
-                        ETHIOPIAN MEDIA WOMEN ASSOCIATION
-                      </span>
-                    </div>
 
-                    <span className="inline-flex items-center gap-1 text-xs font-bold text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 px-2.5 py-1 rounded-md label-mono uppercase shrink-0">
-                      <Check className="size-3" />
-                      {t("Completed", "ተጠናቋል")}
-                    </span>
-                  </div>
-
-                  {/* Main Amount Callout */}
-                  <div className="py-5 border-b border-dashed border-border/80 flex items-center justify-between">
-                    <div>
-                      <span className="text-xs uppercase label-mono text-muted-foreground font-semibold block mb-0.5">
-                        {t("Amount Contributed", "የተበረከተው ድጋፍ መጠን")}
-                      </span>
-                      <div className="font-display text-3xl sm:text-4xl font-extrabold text-primary">
-                        {result.amount ? `${result.amount.toLocaleString()} ${result.currency || "ETB"}` : "Confirmed"}
-                      </div>
-                    </div>
-                    <div className="text-right">
-                      <span className="text-xs uppercase label-mono text-muted-foreground font-semibold block mb-0.5">
-                        {t("Payment Channel", "የክፍያ መንገድ")}
-                      </span>
-                      <span className="text-sm font-semibold uppercase text-foreground font-mono">
-                        {result.paymentMethod || "Chapa Gateway"}
-                      </span>
-                    </div>
-                  </div>
-
-                  {/* Key Receipt Fields Table */}
-                  <div className="py-5 border-b-2 border-dashed border-border/80 space-y-3 text-xs sm:text-sm font-mono">
-                    <div className="flex items-center justify-between">
-                      <span className="text-muted-foreground label-mono uppercase">{t("Transaction Ref", "የግብይት መለያ")}</span>
-                      <div className="flex items-center gap-1.5 font-bold text-foreground">
-                        <span className="truncate max-w-[180px] sm:max-w-[240px]">{result.txRef}</span>
-                        <button
-                          type="button"
-                          onClick={() => handleCopyTxRef(result.txRef || "")}
-                          className="p-1 rounded hover:bg-muted text-muted-foreground hover:text-foreground cursor-pointer transition-colors"
-                          title={t("Copy ID", "ቁጥሩን ቅዳ")}
-                        >
-                          {copiedTxRef ? <Check className="size-3 text-emerald-500" /> : <Copy className="size-3" />}
-                        </button>
+                      {/* 3-Cell Date Box matching Reference Layout */}
+                      <div className="flex items-center gap-2">
+                        <span className="font-display font-bold text-xs sm:text-sm text-neutral-700">Date</span>
+                        <div className="flex border border-neutral-400 rounded overflow-hidden text-xs font-mono font-bold">
+                          <span className="px-2 py-0.5 bg-neutral-100 border-r border-neutral-400 text-center" title="Day">
+                            {dayStr}
+                          </span>
+                          <span className="px-2 py-0.5 bg-neutral-100 border-r border-neutral-400 text-center" title="Month">
+                            {monthStr}
+                          </span>
+                          <span className="px-2 py-0.5 bg-neutral-100 text-center" title="Year">
+                            {yearStr}
+                          </span>
+                        </div>
                       </div>
                     </div>
 
-                    <div className="flex items-center justify-between">
-                      <span className="text-muted-foreground label-mono uppercase">{t("Date & Time", "ቀን እና ሰዓት")}</span>
-                      <span className="text-foreground font-medium">
-                        {result.date ? new Date(result.date).toLocaleString() : new Date().toLocaleString()}
-                      </span>
-                    </div>
+                    {/* Main 2-Column Ledger & Amount Grid */}
+                    <div className="grid grid-cols-1 md:grid-cols-12 gap-6 items-start pt-2">
+                      {/* Left 8 Cols: Underline Fields */}
+                      <div className="md:col-span-8 space-y-4 text-xs sm:text-sm">
+                        {/* Received from */}
+                        <div className="flex items-baseline gap-2">
+                          <span className="font-semibold text-neutral-700 whitespace-nowrap">Received from</span>
+                          <div className="flex-1 border-b-2 border-neutral-400 pb-0.5 px-2 font-bold text-neutral-900 truncate">
+                            {isAnon ? "Anonymous Supporter (Protected)" : result.donorName || "Valued Supporter"}
+                          </div>
+                        </div>
 
-                    <div className="flex items-center justify-between">
-                      <span className="text-muted-foreground label-mono uppercase">{t("Donor", "ደጋፊ")}</span>
-                      <span className="text-foreground font-bold">
-                        {isAnon
-                          ? t("Anonymous Donor (Protected)", "ስም-አልባ ደጋፊ (የተጠበቀ)")
-                          : result.donorName || "Valued Supporter"}
-                      </span>
-                    </div>
+                        {/* The sum of */}
+                        <div className="flex items-baseline gap-2">
+                          <span className="font-semibold text-neutral-700 whitespace-nowrap">The sum of</span>
+                          <div className="flex-1 border-b-2 border-neutral-400 pb-0.5 px-2 font-medium text-neutral-800 text-xs truncate">
+                            {numberToWords(result.amount || 0)}
+                          </div>
+                        </div>
 
-                    {!isAnon && result.email && (
-                      <div className="flex items-center justify-between">
-                        <span className="text-muted-foreground label-mono uppercase">{t("Receipt Sent To", "ኢሜይል")}</span>
-                        <span className="text-foreground">{result.email}</span>
+                        {/* For / Purpose */}
+                        <div className="flex items-baseline gap-2">
+                          <span className="font-semibold text-neutral-700 whitespace-nowrap">For</span>
+                          <div className="flex-1 border-b-2 border-neutral-400 pb-0.5 px-2 font-medium text-neutral-800 text-xs truncate">
+                            {t("Women in Media & Safety Fund", "የሴት ጋዜጠኞች ደህንነት እና ሙያዊ ድጋፍ ፈንድ")}
+                          </div>
+                        </div>
+
+                        {/* Signature */}
+                        <div className="flex items-baseline gap-2 pt-2">
+                          <span className="font-semibold text-neutral-700 whitespace-nowrap">Signature</span>
+                          <div className="flex-1 border-b-2 border-neutral-400 pb-0.5 px-2 flex items-center justify-between">
+                            <span className="font-serif italic font-bold text-[#8C2D3C] text-sm">
+                              EMWA Finance Office
+                            </span>
+                            <span className="inline-flex items-center gap-1 text-[10px] font-mono text-emerald-700 bg-emerald-100 px-1.5 py-0.5 rounded font-bold">
+                              <BadgeCheck className="size-3" />
+                              VERIFIED
+                            </span>
+                          </div>
+                        </div>
                       </div>
-                    )}
 
-                    <div className="flex items-center justify-between">
-                      <span className="text-muted-foreground label-mono uppercase">{t("Purpose", "አላማ")}</span>
-                      <span className="text-foreground text-right">
-                        {t("Women in Media & Safety Fund", "የሴት ጋዜጠኞች ደህንነት ፈንድ")}
-                      </span>
+                      {/* Right 4 Cols: Amount Box & Payment Checkboxes */}
+                      <div className="md:col-span-4 space-y-3">
+                        {/* Amount Box */}
+                        <div>
+                          <div className="flex items-center justify-between mb-1">
+                            <span className="text-xs font-bold text-neutral-700">Amount:</span>
+                          </div>
+                          <div className="border-2 border-[#8C2D3C] rounded-xl p-2.5 bg-rose-50/50 text-center shadow-sm">
+                            <span className="font-display font-black text-xl sm:text-2xl text-[#8C2D3C]">
+                              {result.amount ? `${result.amount.toLocaleString()} ${result.currency || "ETB"}` : "2,500 ETB"}
+                            </span>
+                          </div>
+                        </div>
+
+                        {/* Payment Method Checkbox List (Exact checkbook style) */}
+                        <div className="space-y-1.5 pt-1 text-xs text-neutral-700 font-medium">
+                          <div className="flex items-center gap-2">
+                            <div className="size-4 rounded border border-neutral-400 bg-[#8C2D3C] text-white flex items-center justify-center text-[10px]">
+                              ✓
+                            </div>
+                            <span className="font-bold text-neutral-900">
+                              {result.paymentMethod || "Online / Card"}
+                            </span>
+                          </div>
+
+                          <div className="flex items-center gap-2 text-neutral-400">
+                            <div className="size-4 rounded border border-neutral-300 bg-white" />
+                            <span>Bank Transfer</span>
+                          </div>
+
+                          <div className="flex items-center gap-2 text-neutral-400">
+                            <div className="size-4 rounded border border-neutral-300 bg-white" />
+                            <span>Telebirr / CBE Birr</span>
+                          </div>
+
+                          <div className="flex items-center gap-2 text-neutral-400">
+                            <div className="size-4 rounded border border-neutral-300 bg-white" />
+                            <span>Other</span>
+                          </div>
+                        </div>
+                      </div>
                     </div>
                   </div>
 
-                  {/* Actions Row */}
-                  <div className="mt-6 flex flex-col sm:flex-row gap-3">
-                    <button
-                      type="button"
-                      onClick={handleDownloadReceipt}
-                      disabled={isDownloading}
-                      className="flex-1 flex items-center justify-center gap-2 rounded-xl bg-primary px-5 py-3.5 text-xs sm:text-sm font-bold text-primary-foreground shadow-md hover:bg-primary/90 transition-all cursor-pointer disabled:opacity-50"
-                    >
-                      <Download className="size-4" />
-                      <span>
-                        {isDownloading
-                          ? t("Generating...", "በማዘጋጀት ላይ...")
-                          : t("Download PDF Receipt", "ደረሰኝ አውርድ (PDF)")}
-                      </span>
-                    </button>
-
-                    <button
-                      type="button"
-                      onClick={handlePrint}
-                      className="flex items-center justify-center gap-2 rounded-xl border border-border bg-background px-4 py-3.5 text-xs sm:text-sm font-semibold text-foreground hover:bg-muted transition-colors cursor-pointer"
-                    >
-                      <Printer className="size-4 text-muted-foreground" />
-                      <span>{t("Print", "አትም")}</span>
-                    </button>
-                  </div>
-
-                  {/* Website URL at the bottom */}
-                  <div className="mt-6 pt-4 border-t border-dashed border-border/80 flex items-center justify-between text-xs text-muted-foreground font-mono">
+                  {/* Bottom Red Bar with Website URL */}
+                  <div className="bg-[#8C2D3C] text-white px-5 sm:px-8 py-3 flex flex-col sm:flex-row items-center justify-between gap-2 text-xs font-mono">
                     <a
                       href="https://ethmwa.org"
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="font-bold text-primary hover:underline flex items-center gap-1"
+                      className="font-bold hover:underline flex items-center gap-1.5 text-white"
                     >
-                      <span>https://ethmwa.org</span>
+                      <span>Website: https://ethmwa.org</span>
                       <ExternalLink className="size-3" />
                     </a>
-                    <span>finance@ethmwa.org</span>
+                    <span className="text-rose-200">Email: finance@ethmwa.org</span>
                   </div>
                 </div>
               </div>
+
+              {/* Actions Row Beneath Voucher */}
+              <div className="mt-5 flex flex-col sm:flex-row gap-3">
+                <button
+                  type="button"
+                  onClick={handleDownloadReceipt}
+                  disabled={isDownloading}
+                  className="flex-1 flex items-center justify-center gap-2 rounded-xl bg-primary px-5 py-3.5 text-xs sm:text-sm font-bold text-primary-foreground shadow-md hover:bg-primary/90 transition-all cursor-pointer disabled:opacity-50"
+                >
+                  <Download className="size-4" />
+                  <span>
+                    {isDownloading
+                      ? t("Generating...", "ደረሰኝ በማዘጋጀት ላይ...")
+                      : t("Download Official PDF Receipt", "ኦፊሴላዊ ደረሰኝ አውርድ (PDF)")}
+                  </span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={handlePrint}
+                  className="flex items-center justify-center gap-2 rounded-xl border border-border bg-card px-4 py-3.5 text-xs sm:text-sm font-semibold text-foreground hover:bg-muted transition-colors cursor-pointer"
+                >
+                  <Printer className="size-4 text-muted-foreground" />
+                  <span>{t("Print Voucher", "ደረሰኝ አትም")}</span>
+                </button>
+              </div>
             </div>
 
-            {/* Right Column: Impact Realized & Social Sharing (5 Cols) */}
-            <div className="lg:col-span-5 space-y-5">
+            {/* Right Column: Impact Realized & Social Sharing (4 Cols) */}
+            <div className="lg:col-span-4 space-y-5">
               {/* Dynamic Impact Card */}
               <div className="rounded-3xl border border-border bg-card p-6 shadow-sm space-y-4">
                 <div className="flex items-center gap-2 text-primary font-display font-bold text-lg">
                   <Sparkles className="size-5" />
                   <span>{t("What Your Gift Accomplishes", "የእርስዎ ድጋፍ የሚያመጣው ተጨባጭ ለውጥ")}</span>
                 </div>
-                <p className="text-xs sm:text-sm text-muted-foreground leading-relaxed">
+                <p className="text-xs text-muted-foreground leading-relaxed">
                   {t(
                     "Your generous donation directly funds emergency defense, hands-on newsroom fellowships, and regional safety kits for women journalists across Ethiopia.",
                     "ያደረጉት አስተዋጽዖ ለሴት ጋዜጠኞች ደህንነት፣ ለምርመራ ጋዜጠኝነት ስኮላርሺፕ እና ለክልል ጋዜጠኞች ድጋፍ በቀጥታ ይውላል።",
@@ -566,13 +667,6 @@ function ThankYouPage() {
                   </div>
                   <span className="text-[10px] uppercase label-mono text-muted-foreground">{t("Spread Impact", "አጋራ")}</span>
                 </div>
-
-                <p className="text-xs text-muted-foreground">
-                  {t(
-                    "Encourage your network to stand with female reporters and media diversity in Ethiopia.",
-                    "ጓደኞችዎ እና ማህበረሰብዎ ለሴት ጋዜጠኞች ድምፅ እንዲሆኑ ያበረታቱ።",
-                  )}
-                </p>
 
                 <div className="grid grid-cols-3 gap-2">
                   {/* Telegram */}
@@ -624,10 +718,10 @@ function ThankYouPage() {
                   </div>
                   <div>
                     <span className="font-display text-xs font-bold text-foreground group-hover:text-primary transition-colors block">
-                      {t("Our Programs", "ፕሮግራሞቻችን")}
+                      {t("Programs", "ፕሮግራሞቻችን")}
                     </span>
                     <span className="text-[10px] text-muted-foreground block mt-0.5">
-                      {t("Explore fellowships & hubs", "ስኮላርሺፖችን ይጎብኙ")}
+                      {t("Explore fellowships", "ስኮላርሺፖችን ይጎብኙ")}
                     </span>
                   </div>
                 </Link>
@@ -644,14 +738,14 @@ function ThankYouPage() {
                       {t("Join Network", "አባል ይሁኑ")}
                     </span>
                     <span className="text-[10px] text-muted-foreground block mt-0.5">
-                      {t("400+ Media Professionals", "400+ የሚዲያ ባለሙያዎች")}
+                      {t("400+ Journalists", "400+ ጋዜጠኞች")}
                     </span>
                   </div>
                 </Link>
               </div>
 
               {/* Home Link */}
-              <div className="pt-2 text-center">
+              <div className="pt-1 text-center">
                 <Link
                   to="/"
                   className="inline-flex items-center gap-1.5 text-xs font-bold label-mono uppercase text-muted-foreground hover:text-primary transition-colors"
