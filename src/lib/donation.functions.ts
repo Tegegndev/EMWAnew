@@ -41,7 +41,7 @@ const getChapaSecretKey = (): string => {
     env.CHAPA_SECRET_KEY ||
     (metaEnv as Record<string, string | undefined>).VITE_CHAPA_SECRET_KEY ||
     (metaEnv as Record<string, string | undefined>).CHAPA_SECRET_KEY ||
-    "CHASECK_TEST-fKGMgwXlDNj76afswCLd1PN6YoWN4Jjr";
+    "";
   return (key || "").trim();
 };
 
@@ -74,7 +74,7 @@ export const initializeDonation = createServerFn({ method: "POST" })
     if (!secretKey) {
       return {
         success: false,
-        error: "Payment gateway configuration is missing.",
+        error: "CHAPA_NOT_CONFIGURED",
       };
     }
 

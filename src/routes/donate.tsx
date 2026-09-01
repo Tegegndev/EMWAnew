@@ -1,6 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useState, type FormEvent } from "react";
 import {
+  AlertTriangle,
   ArrowRight,
   BadgeCheck,
   Check,
@@ -16,6 +17,7 @@ import {
   Sparkles,
   Users,
   Wallet,
+  X,
 } from "lucide-react";
 import { PageShell } from "@/components/page-shell";
 import { useLanguage } from "@/lib/language-context";
@@ -155,6 +157,8 @@ function DonatePage() {
 
   const effectiveAmount = customAmount ? parseFloat(customAmount) || 0 : selectedAmount;
 
+  const [isChapaNotConfiguredModalOpen, setIsChapaNotConfiguredModalOpen] = useState(false);
+
   const handleCopy = (accountNum: string, bankLabel: string) => {
     navigator.clipboard.writeText(accountNum);
     setCopiedAccount(accountNum);
@@ -212,6 +216,20 @@ function DonatePage() {
         },
       });
 
+      if (result.error === "CHAPA_NOT_CONFIGURED" || result.error?.includes("CHAPA_NOT_CONFIGURED")) {
+        if (paymentWindow && !paymentWindow.closed) {
+          paymentWindow.close();
+        }
+        setIsChapaNotConfiguredModalOpen(true);
+        toast.error(
+          t(
+            "Chapa is not configured. Please contact the developer.",
+            "የቻፓ (Chapa) ክፍያ አልተዋቀረም፤ እባክዎን የሲስተም አዘጋጁን ያነጋግሩ።",
+          ),
+        );
+        return;
+      }
+
       if (result.success && result.checkoutUrl) {
         if (typeof window !== "undefined") {
           if (result.txRef) sessionStorage.setItem("emwa_last_tx_ref", result.txRef);
@@ -246,6 +264,19 @@ function DonatePage() {
       if (paymentWindow && !paymentWindow.closed) {
         paymentWindow.close();
       }
+
+      const rawMsg = err instanceof Error ? err.message : String(err);
+      if (rawMsg === "CHAPA_NOT_CONFIGURED" || rawMsg.includes("CHAPA_NOT_CONFIGURED")) {
+        setIsChapaNotConfiguredModalOpen(true);
+        toast.error(
+          t(
+            "Chapa is not configured. Please contact the developer.",
+            "የቻፓ (Chapa) ክፍያ አልተዋቀረም፤ እባክዎን የሲስተም አዘጋጁን ያነጋግሩ።",
+          ),
+        );
+        return;
+      }
+
       const msg =
         err instanceof Error
           ? err.message
@@ -721,6 +752,58 @@ function DonatePage() {
           </div>
         </div>
       </section>
+
+      {/* Chapa Configuration Warning Modal Popup */}
+      {isChapaNotConfiguredModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs animate-fade-in">
+          <div className="relative w-full max-w-md rounded-3xl border-2 border-amber-500/30 bg-card p-6 sm:p-8 shadow-2xl space-y-5">
+            <button
+              type="button"
+              onClick={() => setIsChapaNotConfiguredModalOpen(false)}
+              className="absolute top-4 right-4 p-1.5 rounded-full text-muted-foreground hover:bg-muted hover:text-foreground transition-colors cursor-pointer"
+              title={t("Close", "ዝጋ")}
+            >
+              <X className="size-5" />
+            </button>
+
+            <div className="size-14 rounded-2xl bg-amber-500/15 text-amber-600 dark:text-amber-400 flex items-center justify-center mx-auto ring-8 ring-amber-500/10">
+              <AlertTriangle className="size-7" />
+            </div>
+
+            <div className="text-center space-y-2">
+              <h3 className="font-display text-xl sm:text-2xl font-bold text-foreground">
+                {t("Chapa Payment Gateway Not Configured", "የቻፓ (Chapa) ክፍያ አልተዋቀረም")}
+              </h3>
+              <p className="text-xs sm:text-sm text-muted-foreground leading-relaxed">
+                {language === "am"
+                  ? "የቻፓ ክፍያ ቁልፍ (CHAPA_SECRET_KEY) በሲስተሙ አልተዋቀረም። እባክዎን የሲስተም አዘጋጁን (Developer) ያነጋግሩ።"
+                  : "Chapa is not configured in the environment variables. Please contact the developer to set up the CHAPA_SECRET_KEY."}
+              </p>
+            </div>
+
+            <div className="pt-2 space-y-2.5">
+              <button
+                type="button"
+                onClick={() => {
+                  setIsChapaNotConfiguredModalOpen(false);
+                  setMethod("bank");
+                }}
+                className="w-full flex items-center justify-center gap-2 rounded-xl bg-primary px-5 py-3.5 text-xs sm:text-sm font-bold text-primary-foreground shadow-md hover:bg-primary/90 transition-all cursor-pointer"
+              >
+                <span>{t("Use Direct Bank Transfer Instead", "በቀጥታ የባንክ ሂሳብ ዝውውር ይጠቀሙ")}</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setIsChapaNotConfiguredModalOpen(false)}
+                className="w-full rounded-xl border border-border bg-background px-4 py-2.5 text-xs font-semibold text-muted-foreground hover:text-foreground hover:bg-muted transition-colors cursor-pointer"
+              >
+                {t("Close", "ዝጋ")}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </PageShell>
   );
 }
