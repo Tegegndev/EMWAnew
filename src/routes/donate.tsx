@@ -57,29 +57,8 @@ const BANK_ACCOUNTS = [
     bankEn: "Commercial Bank of Ethiopia (CBE)",
     bankAm: "የኢትዮጵያ ንግድ ባንክ (CBE)",
     accountName: "Ethiopian Media Women Association",
-    accountNumber: "1000123456789",
-    branch: "Finfinne Branch, Addis Ababa",
-  },
-  {
-    bankEn: "Awash Bank",
-    bankAm: "አዋሽ ባንክ",
-    accountName: "Ethiopian Media Women Association",
-    accountNumber: "013208765432100",
-    branch: "HQ Branch, Addis Ababa",
-  },
-  {
-    bankEn: "Bank of Abyssinia (BOA)",
-    bankAm: "የአቢሲኒያ ባንክ",
-    accountName: "Ethiopian Media Women Association",
-    accountNumber: "84729104",
-    branch: "Legehar Branch, Addis Ababa",
-  },
-  {
-    bankEn: "Electronic Merchant Account",
-    bankAm: "የዲጂታል ክፍያ ሂሳብ",
-    accountName: "EMWA Donation",
-    accountNumber: "998877",
-    branch: "Merchant Shortcode",
+    accountNumber: "1000002275973",
+    branch: "Addis Ababa, Ethiopia",
   },
 ];
 
