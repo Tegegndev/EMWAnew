@@ -192,9 +192,6 @@ function DonatePage() {
 
     setIsSubmitting(true);
 
-    // Open a new tab immediately within user-initiated click context to avoid popup blocker issues
-    const paymentWindow = typeof window !== "undefined" ? window.open("about:blank", "_blank") : null;
-
     try {
       toast.info(
         t(
@@ -217,9 +214,6 @@ function DonatePage() {
       });
 
       if (result.error === "CHAPA_NOT_CONFIGURED" || result.error?.includes("CHAPA_NOT_CONFIGURED")) {
-        if (paymentWindow && !paymentWindow.closed) {
-          paymentWindow.close();
-        }
         setIsChapaNotConfiguredModalOpen(true);
         toast.error(
           t(
@@ -232,31 +226,15 @@ function DonatePage() {
 
       if (result.success) {
         if (result.checkoutUrl) {
-          if (paymentWindow && !paymentWindow.closed) {
-            paymentWindow.location.href = result.checkoutUrl;
-          } else {
-            window.open(result.checkoutUrl, "_blank", "noopener,noreferrer") || (window.location.href = result.checkoutUrl);
-          }
-        } else {
-          // Direct form redirect was executed
-          if (paymentWindow && !paymentWindow.closed) {
-            paymentWindow.close();
-          }
+          window.open(result.checkoutUrl, "_blank", "noopener,noreferrer") || (window.location.href = result.checkoutUrl);
         }
       } else {
-        if (paymentWindow && !paymentWindow.closed) {
-          paymentWindow.close();
-        }
         throw new Error(
           result.error ||
             t("Unable to initialize payment. Please try again.", "ክፍያውን ማከናወን አልተቻለም። እባክዎ እንደገና ይሞክሩ።"),
         );
       }
     } catch (err) {
-      if (paymentWindow && !paymentWindow.closed) {
-        paymentWindow.close();
-      }
-
       const rawMsg = err instanceof Error ? err.message : String(err);
       if (rawMsg === "CHAPA_NOT_CONFIGURED" || rawMsg.includes("CHAPA_NOT_CONFIGURED")) {
         setIsChapaNotConfiguredModalOpen(true);
