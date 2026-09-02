@@ -230,26 +230,18 @@ function DonatePage() {
         return;
       }
 
-      if (result.success && result.checkoutUrl) {
-        if (typeof window !== "undefined") {
-          if (result.txRef) sessionStorage.setItem("emwa_last_tx_ref", result.txRef);
-          sessionStorage.setItem("emwa_last_amount", String(effectiveAmount));
-          sessionStorage.setItem("emwa_last_is_anonymous", isAnonymous ? "true" : "false");
-          sessionStorage.setItem(
-            "emwa_last_donor_name",
-            isAnonymous ? "Anonymous Supporter" : `${cleanFirstName} ${cleanLastName}`.trim(),
-          );
-          if (!isAnonymous && cleanEmail) {
-            sessionStorage.setItem("emwa_last_donor_email", cleanEmail);
+      if (result.success) {
+        if (result.checkoutUrl) {
+          if (paymentWindow && !paymentWindow.closed) {
+            paymentWindow.location.href = result.checkoutUrl;
           } else {
-            sessionStorage.removeItem("emwa_last_donor_email");
+            window.open(result.checkoutUrl, "_blank", "noopener,noreferrer") || (window.location.href = result.checkoutUrl);
           }
-        }
-
-        if (paymentWindow && !paymentWindow.closed) {
-          paymentWindow.location.href = result.checkoutUrl;
         } else {
-          window.open(result.checkoutUrl, "_blank", "noopener,noreferrer") || (window.location.href = result.checkoutUrl);
+          // Direct form redirect was executed
+          if (paymentWindow && !paymentWindow.closed) {
+            paymentWindow.close();
+          }
         }
       } else {
         if (paymentWindow && !paymentWindow.closed) {
@@ -776,8 +768,8 @@ function DonatePage() {
               </h3>
               <p className="text-xs sm:text-sm text-muted-foreground leading-relaxed">
                 {language === "am"
-                  ? "የቻፓ ክፍያ ቁልፍ (CHAPA_SECRET_KEY) በሲስተሙ አልተዋቀረም። እባክዎን የሲስተም አዘጋጁን (Developer) ያነጋግሩ።"
-                  : "Chapa is not configured in the environment variables. Please contact the developer to set up the CHAPA_SECRET_KEY."}
+                  ? "የቻፓ ክፍያ ቁልፍ (VITE_CHAPA_PUBLIC_KEY) በሲስተሙ አልተዋቀረም። እባክዎን የሲስተም አዘጋጁን (Developer) ያነጋግሩ።"
+                  : "Chapa is not configured in the environment variables. Please contact the developer to set up the VITE_CHAPA_PUBLIC_KEY."}
               </p>
             </div>
 

@@ -2,6 +2,26 @@ import * as ftp from "basic-ftp";
 import path from "node:path";
 import fs from "node:fs";
 
+// Load .env file automatically if present
+const envPath = path.resolve(process.cwd(), ".env");
+if (fs.existsSync(envPath)) {
+  const envContent = fs.readFileSync(envPath, "utf-8");
+  for (const line of envContent.split(/\r?\n/)) {
+    const trimmed = line.trim();
+    if (!trimmed || trimmed.startsWith("#")) continue;
+    const eqIdx = trimmed.indexOf("=");
+    if (eqIdx !== -1) {
+      const key = trimmed.slice(0, eqIdx).trim();
+      let value = trimmed.slice(eqIdx + 1).trim();
+      // Remove surrounding quotes if present
+      if ((value.startsWith('"') && value.endsWith('"')) || (value.startsWith("'") && value.endsWith("'"))) {
+        value = value.slice(1, -1);
+      }
+      process.env[key] = value;
+    }
+  }
+}
+
 async function main() {
   const host = process.env.FTP_SERVER?.trim();
   const user = process.env.FTP_USERNAME?.trim();
@@ -32,7 +52,11 @@ async function main() {
       password,
       port,
       secure,
-      secureOptions: { rejectUnauthorized: false },
+      secureOptions: {
+        rejectUnauthorized: false,
+        maxVersion: "TLSv1.2",
+        minVersion: "TLSv1.2",
+      },
     });
 
     const initialPwd = await client.pwd();
