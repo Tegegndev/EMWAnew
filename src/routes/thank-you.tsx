@@ -301,16 +301,15 @@ function ThankYouPage() {
       doc.setTextColor(140, 45, 60);
       doc.text(amountStr, 148, y + 9);
 
-      // Signature line on the left
+      // Status on the left
       doc.setFontSize(9);
       doc.setTextColor(60, 60, 60);
       doc.setFont("helvetica", "normal");
-      doc.text("Authorized Signature:", 14, y + 6);
-      doc.line(48, y + 8, 130, y + 8);
-      doc.setFont("helvetica", "italic");
+      doc.text("Payment Status:", 14, y + 6);
+      doc.setFont("helvetica", "bold");
       doc.setFontSize(8);
       doc.setTextColor(16, 185, 129);
-      doc.text("EMWA Finance Office (Digitally Verified)", 52, y + 6);
+      doc.text("[ OFFICIALLY VERIFIED & CONFIRMED ]", 45, y + 6);
 
       // Bottom Red Stripe
       doc.setFillColor(140, 45, 60);
@@ -535,18 +534,13 @@ function ThankYouPage() {
                           </div>
                         </div>
 
-                        {/* Signature */}
-                        <div className="flex items-baseline gap-2 pt-2">
-                          <span className="font-semibold text-neutral-700 whitespace-nowrap">Signature</span>
-                          <div className="flex-1 border-b-2 border-neutral-400 pb-0.5 px-2 flex items-center justify-between">
-                            <span className="font-serif italic font-bold text-[#8C2D3C] text-sm">
-                              EMWA Finance Office
-                            </span>
-                            <span className="inline-flex items-center gap-1 text-[10px] font-mono text-emerald-700 bg-emerald-100 px-1.5 py-0.5 rounded font-bold">
-                              <BadgeCheck className="size-3" />
-                              VERIFIED
-                            </span>
-                          </div>
+                        {/* Verification Status */}
+                        <div className="flex items-center gap-2 pt-1">
+                          <span className="font-semibold text-neutral-700 whitespace-nowrap">Status:</span>
+                          <span className="inline-flex items-center gap-1.5 text-xs font-mono text-emerald-700 bg-emerald-100 px-2.5 py-1 rounded-md font-bold">
+                            <BadgeCheck className="size-3.5" />
+                            OFFICIALLY VERIFIED
+                          </span>
                         </div>
                       </div>
 
