@@ -550,26 +550,15 @@ function ThankYouPage() {
                         </div>
                       </div>
 
-                      {/* Right 4 Cols: Amount Box & Payment Details */}
-                      <div className="md:col-span-4 space-y-3">
+                      {/* Right 4 Cols: Amount Box */}
+                      <div className="md:col-span-4 flex flex-col justify-center">
                         {/* Amount Box */}
                         <div>
                           <span className="text-xs font-bold text-neutral-700 block mb-1">Amount:</span>
-                          <div className="border-2 border-[#8C2D3C] rounded-xl p-3 bg-rose-50/60 text-center shadow-sm">
+                          <div className="border-2 border-[#8C2D3C] rounded-xl p-4 bg-rose-50/60 text-center shadow-sm">
                             <span className="font-display font-black text-2xl sm:text-3xl text-[#8C2D3C] block leading-tight">
                               {result.amount ? `${result.amount.toLocaleString()} ${result.currency || "ETB"}` : "2,500 ETB"}
                             </span>
-                          </div>
-                        </div>
-
-                        {/* Payment Channel Info */}
-                        <div className="pt-1">
-                          <span className="text-[11px] font-semibold text-neutral-500 uppercase tracking-wider block mb-1">
-                            Payment Method:
-                          </span>
-                          <div className="bg-neutral-100 rounded-lg px-3 py-2 border border-neutral-200 text-xs font-mono font-bold text-neutral-800 flex items-center justify-between">
-                            <span className="truncate">{result.paymentMethod || "Chapa Gateway"}</span>
-                            <span className="text-emerald-700 font-bold shrink-0 ml-1.5">✓ PAID</span>
                           </div>
                         </div>
                       </div>

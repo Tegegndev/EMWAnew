@@ -215,7 +215,6 @@ export const verifyDonation = async ({
     currency: "ETB",
     txRef: data.txRef,
     reference: data.txRef,
-    paymentMethod: "Chapa Gateway (Telebirr / CBEBirr / Card)",
     receiptUrl: `https://chapa.link/payment-receipt/${encodeURIComponent(data.txRef)}`,
     donorName: savedName,
     email: savedEmail,
