@@ -4,8 +4,8 @@ import { useMemo, useState } from "react";
 import { Search as SearchIcon } from "lucide-react";
 
 export const Route = createFileRoute("/search")({
-  validateSearch: (search: Record<string, unknown>) => ({
-    q: typeof search.q === "string" ? search.q : "",
+  validateSearch: (search: Record<string, unknown>): { q?: string } => ({
+    q: typeof search.q === "string" && search.q ? search.q : undefined,
   }),
   head: () => ({
     meta: [
@@ -37,12 +37,13 @@ const POPULAR = ["membership", "safety", "experts", "grants", "leadership"];
 
 function SearchPage() {
   const { q: initialQuery } = Route.useSearch();
-  const [q, setQ] = useState(initialQuery);
+  const [q, setQ] = useState(initialQuery || "");
   const results = useMemo(() => {
-    if (!q.trim()) return [];
+    const cleanQ = (q || "").trim();
+    if (!cleanQ) return [];
     return INDEX.filter(d =>
-      d.title.toLowerCase().includes(q.toLowerCase()) ||
-      d.excerpt.toLowerCase().includes(q.toLowerCase())
+      d.title.toLowerCase().includes(cleanQ.toLowerCase()) ||
+      d.excerpt.toLowerCase().includes(cleanQ.toLowerCase())
     );
   }, [q]);
 

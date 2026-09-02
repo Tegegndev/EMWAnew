@@ -52,17 +52,29 @@ async function main() {
 
   console.log("⚡ Pre-rendering static HTML for all routes...");
 
+  let rootHtml = "";
+
   for (const route of ROUTES) {
     try {
-      const url = `http://localhost${route}`;
-      const response = await ssrHandler.fetch(new Request(url));
-      const html = await response.text();
+      let url = `http://localhost${route}`;
+      let response = await ssrHandler.fetch(new Request(url));
+      let html = await response.text();
 
-      if (response.status !== 200 && response.status !== 302 && response.status !== 307) {
-        console.warn(`⚠️ Warning: Route ${route} returned status ${response.status}`);
+      // If route returned a redirect, follow it
+      if ((response.status === 307 || response.status === 302 || response.status === 301) && response.headers.get("location")) {
+        const loc = response.headers.get("location");
+        const nextUrl = loc.startsWith("http") ? loc : `http://localhost${loc}`;
+        response = await ssrHandler.fetch(new Request(nextUrl));
+        html = await response.text();
+      }
+
+      // If still empty, fallback to rootHtml template
+      if (!html.trim() && rootHtml) {
+        html = rootHtml;
       }
 
       if (route === "/") {
+        rootHtml = html;
         fs.writeFileSync(path.join(publicDir, "index.html"), html, "utf-8");
         console.log(`  ✓ / -> .output/public/index.html (${html.length} bytes)`);
       } else {
@@ -71,7 +83,7 @@ async function main() {
         fs.mkdirSync(routeDir, { recursive: true });
         fs.writeFileSync(path.join(routeDir, "index.html"), html, "utf-8");
         fs.writeFileSync(path.join(publicDir, `${routeClean}.html`), html, "utf-8");
-        console.log(`  ✓ ${route} -> .output/public/${routeClean}/index.html`);
+        console.log(`  ✓ ${route} -> .output/public/${routeClean}/index.html (${html.length} bytes)`);
       }
     } catch (err) {
       console.error(`❌ Failed to pre-render route ${route}:`, err);

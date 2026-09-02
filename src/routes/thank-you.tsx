@@ -26,17 +26,27 @@ import { toast } from "sonner";
 import logo from "@/assets/emwa-logo-new.png";
 
 export const Route = createFileRoute("/thank-you")({
-  validateSearch: (search: Record<string, unknown>) => {
+  validateSearch: (search: Record<string, unknown>): {
+    tx_ref?: string;
+    trx_ref?: string;
+    reference?: string;
+    transaction_id?: string;
+    anon?: string;
+  } => {
     const rawRef =
       (typeof search.tx_ref === "string" && search.tx_ref.trim() !== "" && search.tx_ref) ||
       (typeof search.trx_ref === "string" && search.trx_ref.trim() !== "" && search.trx_ref) ||
       (typeof search.reference === "string" && search.reference.trim() !== "" && search.reference) ||
       (typeof search.transaction_id === "string" && search.transaction_id.trim() !== "" && search.transaction_id) ||
-      "";
-    const isAnon = search.anon === "1" || search.is_anonymous === "true" || search.is_anonymous === true;
+      undefined;
+    const isAnon =
+      search.anon === "1" ||
+      search["amp;anon"] === "1" ||
+      search.is_anonymous === "true" ||
+      search.is_anonymous === true;
     return {
       tx_ref: rawRef,
-      anon: isAnon ? "1" : "0",
+      anon: isAnon ? "1" : (typeof search.anon === "string" ? search.anon : undefined),
     };
   },
   head: () => ({
