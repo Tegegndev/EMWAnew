@@ -24,6 +24,8 @@ import {
   ChevronRight,
   MessageCircleQuestion,
 } from "lucide-react";
+import heroJournalist from "@/assets/hero-journalist.jpg";
+import emwaGroupPhoto from "@/assets/emwa-group-photo.png";
 
 // Landing-page placeholder images. Replace any `src` value here to update the
 // corresponding image without changing the page layout.
@@ -102,18 +104,28 @@ type HeroSlide = {
 
 const DEFAULT_HERO_SLIDES: HeroSlide[] = [
   {
-    img: "/Fitsum%20Alemayehu.png",
-    title: "A legacy of service.",
-    titleAm: "የአገልግሎት ውርስ።",
-    description: "Fitsum Alemayehu, the first president of EMWA, served the association with diligence and competence for which it is forever grateful.",
-    descriptionAm: "የEMWA የመጀመሪያዋ ፕሬዝዳንት ፍጹም ዓለማየሁ ማህበሩን በትጋትና በብቃት ያገለገሉ ሲሆን ማህበሩ ዘወትር ምስጋናውን ያቀርባል።",
-    text: "I have many happy memories in Ethiopia and sad to leave. But, I am saddened most because I will miss being part of EMWA.",
-    textAm: "በኢትዮጵያ ውስጥ ብዙ አስደሳች ትዝታዎች አሉኝ፤ በመለየቴም አዝናለሁ። ይሁን እንጂ ከሁሉ በላይ የሚያሳዝነኝ የEMWA አካል መሆኔ ስለሚቀር ነው።",
-    signoff: "EMWA extends its gratitude to Wzo. Fitsum and wishes her success and all the best.",
-    signoffAm: "EMWA ለወ/ሮ ፍጹም ያለውን ልባዊ ምስጋና እያቀረበ ስኬትና መልካሙን ሁሉ ይመኛል።",
-    author: "Fitsum Alemayehu",
-    role: "Founding leadership",
-    roleAm: "የመሥራች አመራር",
+    img: emwaGroupPhoto,
+    title: "Empowering Women in Media.",
+    titleAm: "ሴት የሚዲያ ባለሙያዎችን ማብቃት።",
+    description: "Advancing gender equality, safety, and professional excellence across Ethiopian newsrooms and media institutions.",
+    descriptionAm: "በኢትዮጵያ የዜና ክፍሎችና የሚዲያ ተቋማት የፆታ እኩልነትን፣ ደህንነትንና የሙያ ልቀትን ማሳደግ።",
+    text: "Media freedom is not merely a press right — it is a human right. And in Ethiopia, it begins with making sure women can speak.",
+    textAm: "የሚዲያ ነፃነት የፕሬስ መብት ብቻ ሳይሆን የሰብዓዊ መብትም ነው። በኢትዮጵያ ውስጥ ደግሞ ሴቶች መናገር መቻላቸውን በማረጋገጥ ይጀምራል።",
+    author: "EMWA Founding Charter",
+    role: "Addis Ababa, 1998",
+    roleAm: "አዲስ አበባ፣ 1998 ዓ.ም",
+  },
+  {
+    img: emwaGroupPhoto,
+    title: "A Nationwide Community.",
+    titleAm: "አገር አቀፍ ማህበረሰብ።",
+    description: "Connecting journalists, editors, communicators, and media leaders across all regions of Ethiopia.",
+    descriptionAm: "በሁሉም የኢትዮጵያ ክልሎች የሚገኙ ጋዜጠኞችን፣ አዘጋጆችንና የሚዲያ መሪዎችን የሚያስተሳስር።",
+    text: "Through solidarity and continuous capacity building, we shape a vibrant and gender-responsive media landscape.",
+    textAm: "በአንድነትና ቀጣይነት ባለው የአቅም ግንባታ ንቁና ለፆታ ምላሽ ሰጪ የሚዲያ ምህዳር እንገነባለን።",
+    author: "Ethiopian Media Women Association",
+    role: "Association Mission",
+    roleAm: "የማህበሩ ተልዕኮ",
   },
 ];
 
@@ -152,7 +164,7 @@ function HomeHero({ t, language }: { t: (english: string, amharic: string) => st
             }
             return {
               id: String(row.id ?? ""),
-              img: img || "/Fitsum%20Alemayehu.png",
+              img: img || heroJournalist,
               title: row.title ? String(row.title) : undefined,
               titleAm: (row.titleAm ?? row.title_am) ? String(row.titleAm ?? row.title_am) : undefined,
               description: (row.description ?? row.description_text) ? String(row.description ?? row.description_text) : undefined,
