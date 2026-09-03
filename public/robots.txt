@@ -1,4 +1,5 @@
 User-agent: *
 Allow: /
-Disallow: /privacy
-Disallow: /terms
+Disallow: /admin
+
+Sitemap: https://ethmwa.org/sitemap.xml
